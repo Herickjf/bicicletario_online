@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS Employee(
         ON DELETE CASCADE
 );
 
-CREATE TYPE BikeStatus AS ENUM ('avaiable', 'rented', 'under maintenance');
+CREATE TYPE BikeStatus AS ENUM ('available', 'rented', 'under_maintenance');
 
 CREATE TABLE IF NOT EXISTS Bike(
     bike_id             SERIAL,
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS Bike(
     -- Poderia ter uma categoria (nova|seminova), mas não vejo necessidade
     image               TEXT DEFAULT 'default_bike_img.svg',
     rent_price          NUMERIC(5,2) NOT NULL,      -- por hora
-    status BikeStatus   DEFAULT 'avaiable',
+    status              BikeStatus DEFAULT 'available',
     tracker_number      INTEGER NOT NULL,
     bike_rack_id        INTEGER NOT NULL,
 
@@ -89,6 +89,7 @@ CREATE TYPE RentStatus AS ENUM ('active', 'finished', 'canceled');
 
 CREATE TABLE IF NOT EXISTS Rent(
     rent_id         SERIAL,
+    rent_date       DATE DEFAULT CURRENT_DATE,
     init_time       TIME DEFAULT CURRENT_TIME,
     end_time        TIME NOT NULL,
     total_value     NUMERIC(6,2) NOT NULL,

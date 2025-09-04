@@ -10,6 +10,16 @@ export class DatabaseController {
         return await this.database.createTables(password);
     }
 
+    @Patch("/recreateAll/:password")
+    async recreate(@Param("password") password: string){
+        return await this.database.recreateTables(password);
+    }
+
+    @Delete("/cleanAll/:password")
+    async cleanAllTables(@Param("password") password: string){
+        return await this.database.cleanTables(password);
+    }
+
     @Delete("/deleteAll/:password")
     async deleteAllTables(@Param("password") password: string){
         return await this.database.deleteAllTables(password);

@@ -56,10 +56,22 @@ export class DatabaseService {
     async createTables(password: string){
         if(password != process.env.DATABASE_PERMISION_PASSWORD)
             throw new UnauthorizedException("[!] Incorrect password. Looks like you're not authorized to do this change!")
-
+        
         return await this.executeSQL("create_tables.sql", "Criação das Tabelas");
     }
+    
+    async recreateTables(password: string){
+        await this.deleteAllTables(password);
+        return await this.createTables(password);
+    }
 
+    async cleanTables(password: string){
+        if(password != process.env.DATABASE_PERMISION_PASSWORD)
+            throw new UnauthorizedException("[!] Incorrect password. Looks like you're not authorized to do this change!")
+
+        return await this.executeSQL("clean_tables.sql", "Esvaziamento das Tabelas");
+    }
+    
     async deleteAllTables(password: string){
         if(password != process.env.DATABASE_PERMISION_PASSWORD)
             throw new UnauthorizedException("[!] Incorrect password. Looks like you're not authorized to do this change!")
