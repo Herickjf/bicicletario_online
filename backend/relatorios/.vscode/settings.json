@@ -1,0 +1,19 @@
+{
+    "go.useLanguageServer": true,
+    "go.languageServerFlags": ["-logfile", "auto"],
+    "go.formatTool": "goimports",
+    "go.lintTool": "staticcheck",
+    "go.lintOnSave": "package",
+    "go.formatOnSave": true,
+    "go.autocompleteUnimportedPackages": true,
+    "go.gocodePackageLookupMode": "go",
+    "go.gotoSymbol.includeImports": true,
+    "go.useCodeSnippetsOnFunctionSuggest": true,
+    "go.docsTool": "gogetdoc",
+    "[go]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        }
+    }
+}
