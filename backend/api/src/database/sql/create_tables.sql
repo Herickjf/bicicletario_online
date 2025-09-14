@@ -29,8 +29,9 @@ CREATE TYPE Role AS ENUM ('owner', 'manager', 'attendant');
 CREATE TABLE IF NOT EXISTS Employee(
     employee_id     SERIAL,
     name            VARCHAR(250) NOT NULL,
-    login           VARCHAR(20) UNIQUE NOT NULL,
-    password        VARCHAR(50) NOT NULL,
+    login           VARCHAR(50) UNIQUE NOT NULL,
+    password        VARCHAR(100) NOT NULL,
+    email           VARCHAR(250) NOT NULL,
     employee_role   Role DEFAULT 'attendant',
     bike_rack_id    INTEGER NOT NULL,
 

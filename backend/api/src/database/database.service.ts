@@ -54,7 +54,8 @@ export class DatabaseService {
 
     // Funcoes de Serviço, de fato
     async createTables(password: string){
-        if(password != process.env.DATABASE_PERMISION_PASSWORD)
+        console.log(process.env.DATABASE_PERMISSION_PASSWORD);
+        if(password != process.env.DATABASE_PERMISSION_PASSWORD)
             throw new UnauthorizedException("[!] Incorrect password. Looks like you're not authorized to do this change!")
         
         return await this.executeSQL("create_tables.sql", "Criação das Tabelas");
@@ -66,21 +67,21 @@ export class DatabaseService {
     }
 
     async cleanTables(password: string){
-        if(password != process.env.DATABASE_PERMISION_PASSWORD)
+        if(password != process.env.DATABASE_PERMISSION_PASSWORD)
             throw new UnauthorizedException("[!] Incorrect password. Looks like you're not authorized to do this change!")
 
         return await this.executeSQL("clean_tables.sql", "Esvaziamento das Tabelas");
     }
     
     async deleteAllTables(password: string){
-        if(password != process.env.DATABASE_PERMISION_PASSWORD)
+        if(password != process.env.DATABASE_PERMISSION_PASSWORD)
             throw new UnauthorizedException("[!] Incorrect password. Looks like you're not authorized to do this change!")
         
         return await this.executeSQL("delete_tables.sql", "Deleção das tabelas");
     }
     
     async deleteTable(password: string, tableName: string){
-        if(password != process.env.DATABASE_PERMISION_PASSWORD)
+        if(password != process.env.DATABASE_PERMISSION_PASSWORD)
             throw new UnauthorizedException("[!] Incorrect password. Looks like you're not authorized to do this change!")
 
         try{
@@ -96,7 +97,7 @@ export class DatabaseService {
     }
 
     async fillTables(password: string){
-        if(password != process.env.DATABASE_PERMISION_PASSWORD)
+        if(password != process.env.DATABASE_PERMISSION_PASSWORD)
             throw new UnauthorizedException("[!] Incorrect password. Looks like you're not authorized to do this change!")
 
         return await this.executeSQL("fill_tables.sql", "Preenchimento das Tabelas");
