@@ -83,6 +83,15 @@ export class UserController {
         return await this.service.search(filter);
     }
 
+    @Get('searchBy')
+    @ApiOperation({
+        summary: 'Busca de Users',
+        description: 'Busca um User específico por palavra chave'
+    })
+    async searchBy(@Body() body: {bike_rack_id: number, filter: string}){
+        return await this.service.searchBy(body.bike_rack_id, body.filter);
+    }
+
     @Patch('update/:id')
     @ApiOperation({
         summary: 'Atualização de Users',

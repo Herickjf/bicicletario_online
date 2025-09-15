@@ -135,6 +135,29 @@ export class BikerackService {
         }
     }
 
+    async lucroNoAno(bikeRackId:number, ano: number){
+        try {
+        return await this.database.query(
+            `
+            SELECT 
+                EXTRACT(MONTH FROM rent_date)::int AS mes,
+                COALESCE(SUM(total_value), 0) AS lucro
+            FROM Rent
+            WHERE bike_rack_id = $1
+              AND EXTRACT(YEAR FROM rent_date) = $2
+            GROUP BY mes
+            ORDER BY mes;
+            `,
+            [bikeRackId, ano]
+        );
+    } catch (e) {
+        throw new BadGatewayException(
+            'Erro ao tentar buscar lucro do ano!',
+            e.message,
+        );
+    }
+    }
+
     async usersPerBikerack(){
         try{
             return await this.database.query(

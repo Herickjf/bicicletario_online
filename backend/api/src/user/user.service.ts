@@ -108,8 +108,10 @@ export class UserService {
     }
 
     async search(filter: {[key: string]: any}){
-        const columns = Object.keys(filter);
-        const values = Object.values(filter);
+        if(filter == null || filter == undefined) return [];
+
+        const columns = Object.keys(filter ? filter : {});
+        const values = Object.values(filter ? filter : {});
 
         const where = columns.map((col, idx) => `${col} = $${idx + 1}`).join(' AND ');
 
@@ -124,6 +126,28 @@ export class UserService {
             );
         }catch(e){
             throw new BadGatewayException('Erro ao tentar buscar User(s)!', e.message);
+        }
+    }
+
+    async searchBy(bike_rack_id: number, filter: string){
+        var query = 
+        `
+        SELECT 
+        u.user_id, u.name, u.email, u.cpf, u.phone,
+        a.street, a.num, a.zip_code, a.city, a.state
+        FROM Users u
+        INNER JOIN Address a ON u.address_id = a.address_id
+        WHERE 
+        u.name  ILIKE '%' || $1 || '%'
+        OR u.email ILIKE '%' || $1 || '%'
+        OR u.cpf   ILIKE '%' || $1 || '%'
+        OR u.phone ILIKE '%' || $1 || '%';
+        `;
+
+        try{
+            return await this.database.query(query, [filter]);
+        }catch(e){
+            throw new BadGatewayException('Erro ao tentar filtrar usuários!');
         }
     }
 

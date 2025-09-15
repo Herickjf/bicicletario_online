@@ -2,6 +2,7 @@ import { Body, Controller, Post, Get, Delete, Patch, BadRequestException, Param 
 import { BikerackService } from './bikerack.service';
 import { ApiBody, ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
 import BikeRackDto from 'src/dtos/BikeRack.dto';
+import { BikeDto } from 'src/dtos/Bike.dto';
 
 @ApiTags('bikeracks')
 @Controller('bikerack')
@@ -16,6 +17,16 @@ export class BikerackController {
     async create(@Body() bikerack: BikeRackDto){
         return await this.service.create(bikerack);
     }
+
+    @Post('createBike')
+    @ApiOperation({
+        summary: 'Criação de Bicicletas',
+        description: 'Cria uma bicicleta no BD, vinculando-a a um bicicletário'
+    })
+    // async createBike(@Body() bike: BikeDto){
+    //     if(!bike.bike_rack_id) throw new BadRequestException('O campo bike_rack_id é obrigatório');
+    //     return await this.service.createBike(bike);
+    // }
 
     @Get('list')
     @ApiOperation({
@@ -48,6 +59,14 @@ export class BikerackController {
     })
     async mainScreenInfo(@Param('id') id_bikerack: number){
         return await this.service.mainScreenInfo(id_bikerack);
+    }
+
+    @Get('lucroNoAno/:bike_rack_id/:ano')
+    @ApiOperation({
+        summary: 'Lucro relativo a cada mês do ano informado'
+    })
+    async lucroNoAno(@Param('bike_rack_id') bikeRackId: number, @Param('ano') ano: number){
+        return await this.service.lucroNoAno(bikeRackId, ano);
     }
 
 
