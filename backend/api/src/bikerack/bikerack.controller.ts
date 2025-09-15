@@ -23,10 +23,9 @@ export class BikerackController {
         summary: 'Criação de Bicicletas',
         description: 'Cria uma bicicleta no BD, vinculando-a a um bicicletário'
     })
-    // async createBike(@Body() bike: BikeDto){
-    //     if(!bike.bike_rack_id) throw new BadRequestException('O campo bike_rack_id é obrigatório');
-    //     return await this.service.createBike(bike);
-    // }
+    async createBike(@Body() bike: BikeDto){
+        return await this.service.createBike(bike);
+    }
 
     @Get('list')
     @ApiOperation({
@@ -35,6 +34,15 @@ export class BikerackController {
     })
     async list(){
         return await this.service.list();
+    }
+
+    @Get('listBikes/:bike_rack_id')
+    @ApiOperation({
+        summary: 'Listagem de Bicicletas de um Bicicletário',
+        description: 'Lista todas as bicicletas vinculadas a um bicicletário específico'
+    })
+    async listBikes(@Param('bike_rack_id') bike_rack_id: number){
+        return await this.service.listBikes(bike_rack_id);
     }
 
     @Get('search')
@@ -124,6 +132,19 @@ export class BikerackController {
         return await this.service.updateMany(whereClauses, data);
     }
 
+    @Patch('updateBike/:bike_rack_id/:bike_id')
+    @ApiOperation({
+        summary: 'Atualização de Bicicletas',
+        description: 'Atualiza os dados de uma bicicleta cadastrada no sistema'
+    })
+    async updateBike(
+        @Param('bike_rack_id') bike_rack_id: number,
+        @Param('bike_id') bike_id: number,
+        @Body() bike: BikeDto
+    ){
+        return await this.service.updateBike(bike_rack_id, bike_id, bike);
+    }
+
 
     @Delete('deleteAll')
     @ApiOperation({
@@ -141,6 +162,15 @@ export class BikerackController {
     })
     async deleteAll(@Param('id') id: number){
         return await this.service.delete(id);
+    }
+
+    @Delete('deleteBike/:bike_rack_id/:bike_id')
+    @ApiOperation({
+        summary: 'Deleção de Bicicletas',
+        description: 'Deleta uma bicicleta cadastrada no sistema'
+    })
+    async deleteBike(@Param('bike_rack_id') bike_rack_id: number, @Param('bike_id') bike_id: number){
+        return await this.service.deleteBike(bike_rack_id, bike_id);
     }
 
 }

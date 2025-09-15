@@ -2,6 +2,7 @@ import { BadGatewayException, BadRequestException, Injectable } from '@nestjs/co
 import { DatabaseService } from 'src/database/database.service';
 import AddressDto from 'src/dtos/Address.dto';
 import BikeRackDto from 'src/dtos/BikeRack.dto';
+import { BikeDto } from 'src/dtos/Bike.dto';
 
 @Injectable()
 export class BikerackService {
@@ -40,6 +41,30 @@ export class BikerackService {
         }
     }
 
+    async createBike(bike: BikeDto){
+        if(!bike.bike_rack_id) throw new BadRequestException('O campo bike_rack_id é obrigatório');
+
+        try{
+            return await this.database.query(
+                `
+                INSERT INTO Bike (model, year, image, rent_price, status, tracker_number, bike_rack_id)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING *;
+                `, [
+                    bike.model, 
+                    bike.year, 
+                    bike.image,
+                    bike.rent_price,
+                    bike.status || 'available',
+                    bike.tracker_number,
+                    bike.bike_rack_id
+                ]
+            );
+        }catch(e){
+            throw {'error': e, 'message': 'Erro ao tentar cadastrar Bicicleta!'};
+        }
+    }
+
     async list(){
         try{
             return await this.database.query(
@@ -51,6 +76,20 @@ export class BikerackService {
             );
         }catch(e){
             throw {'error': e, 'message': 'Erro ao tentar listar Bicicletários!'};
+        }
+    }
+
+    async listBikes(bike_rack_id: number){
+        try{
+            return await this.database.query(
+                `
+                SELECT *
+                FROM Bike
+                WHERE bike_rack_id = $1;
+                `, [bike_rack_id]
+            );
+        }catch(e){
+            throw {'error': e, 'message': 'Erro ao tentar listar Bicicletas do Bicicletário!'};
         }
     }
 
@@ -274,6 +313,30 @@ export class BikerackService {
         }
     }
 
+    async updateBike(id_bike_rack: number, id_bike: number, bike: BikeDto) {
+        try{
+            this.database.query(
+                `
+                UPDATE Bike
+                SET model = $1, year = $2, image = $3, rent_price = $4, status = $5, tracker_number = $6
+                WHERE bike_rack_id = $7 AND bike_id = $8
+                RETURNING *;
+                `, [
+                    bike.model,
+                    bike.year,
+                    bike.image,
+                    bike.rent_price,
+                    bike.status,
+                    bike.tracker_number,
+                    id_bike_rack,
+                    id_bike
+                ]
+            );
+        }catch(e){
+            throw new BadGatewayException('Erro ao tentar atualizar Bicicleta!', e.message);
+        }
+    }
+
     async deleteAll(){  
         return await this.database.query(
             `DELETE FROM BikeRack RETURNING *;`
@@ -283,6 +346,12 @@ export class BikerackService {
     async delete(id: Number){
         return await this.database.query(
             `DELETE FROM BikeRack WHERE bikerack_id = $1 RETURNING *;`, [id]
+        );
+    }
+
+    async deleteBike(bike_rack_id: number, bike_id: number){
+        return await this.database.query(
+            `DELETE FROM Bike WHERE bike_rack_id = $1 AND bike_id = $2 RETURNING *;`, [bike_rack_id, bike_id]
         );
     }
 }

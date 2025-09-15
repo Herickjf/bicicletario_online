@@ -74,22 +74,33 @@ export class UserController {
         return await this.service.list();
     }
 
-    @Get('search')
+    @Post('search')
     @ApiOperation({
         summary: 'Busca de Users',
         description: 'Busca um User específico por uma sequência de campos e valores'
+    })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                filter: { type: 'object' }
+            }
+        }
     })
     async search(@Body() filter: {[key: string]: any}){
         return await this.service.search(filter);
     }
 
-    @Get('searchBy')
+    @Get('searchBy/:bike_rack_id/:filter')
     @ApiOperation({
         summary: 'Busca de Users',
         description: 'Busca um User específico por palavra chave'
     })
-    async searchBy(@Body() body: {bike_rack_id: number, filter: string}){
-        return await this.service.searchBy(body.bike_rack_id, body.filter);
+    async searchBy(
+        @Param('bike_rack_id') bike_rack_id: number, 
+        @Param('filter') filter: string
+    ){
+        return await this.service.searchBy(bike_rack_id, filter);
     }
 
     @Patch('update/:id')
