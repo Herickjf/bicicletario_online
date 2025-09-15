@@ -35,22 +35,23 @@ export class BikerackController {
         return await this.service.search(filter);
     }
 
-    @Get('customersPerBikerack')
+    @Get('mainScreenInfo/:id')
     @ApiOperation({
-        summary: 'Listagem de Clientes por Bicicletário',
-        description: 'Lista a quantidade de clientes cadastrados em cada bicicletário'
+        summary: 'Informações para Tela Principal',
+        description: 'Busca as informações necessárias para a tela principal do aplicativo'
     })
-    async customersPerBikerack(){
-        return await this.service.customersPerBikerack();
+    async mainScreenInfo(@Param('id') id_bikerack: number){
+        return await this.service.mainScreenInfo(id_bikerack);
     }
 
-    @Get('employeesPerBikerack')
+
+    @Get('usersPerBikerack')
     @ApiOperation({
         summary: 'Listagem de Funcionários por Bicicletário',
         description: 'Lista a quantidade de funcionários cadastrados em cada bicicletário'
     })
-    async employeesPerBikerack(){
-        return await this.service.employeesPerBikerack();
+    async usersPerBikerack(){
+        return await this.service.usersPerBikerack();
     }
 
     @Patch('update/:id')

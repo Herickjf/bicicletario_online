@@ -15,7 +15,7 @@ export class BikerackService {
                 `
                 INSERT INTO Address (street, num, zip_code, city, state)
                 VALUES ($1, $2, $3, $4, $5)
-                RETURNING address_id
+                RETURNING address_id;
                 `, bikerack.address);
         }catch(e){
             throw {'error': e, 'message': 'Erro ao tentar cadastrar endereço'};
@@ -28,7 +28,7 @@ export class BikerackService {
                 `
                 INSERT INTO BikeRack (name, image, address_id)
                 VALUES ($1, $2, $3)
-                RETURNING *
+                RETURNING *;
                 `, [
                     bikerack.name, 
                     bikerack.image, 
@@ -46,7 +46,7 @@ export class BikerackService {
                 `
                 SELECT br.*, a.*
                 FROM BikeRack br
-                JOIN Address a ON br.address_id = a.address_id
+                JOIN Address a ON br.address_id = a.address_id;
                 `
             );
         }catch(e){
@@ -72,7 +72,7 @@ export class BikerackService {
                 SELECT br.*, a.*
                 FROM BikeRack br
                 JOIN Address a ON br.address_id = a.address_id
-                WHERE ${whereClauses}
+                WHERE ${whereClauses};
                 `, values
             );
         }catch(e){
@@ -80,31 +80,61 @@ export class BikerackService {
         }
     }
 
-    async customersPerBikerack(){
+    async mainScreenInfo(id: number){
+        /*
+           Retorna as informacoes principais da tela inicial:
+           - Quantidade de bicicletas cadastradas no bicicletario
+           - Quantidade de alugueis ativos no bicicletario
+           - Renda mensal do bicicletario
+           - Quantidade de usuarios cadastrados no bicicletario       
+           - Percentual de aumento da renda mensal em relacao ao mes anterior
+        */
+
         try{
             return await this.database.query(
                 `
-                SELECT br.bike_rack_id, br.name, COUNT(c.client_id) AS customer_count
-                FROM BikeRack br
-                LEFT JOIN Client c ON br.bike_rack_id = c.bike_rack_id
-                GROUP BY br.bike_rack_id, br.name
-                ORDER BY customer_count DESC
-                `
+                SELECT 
+                    (SELECT COUNT(*) FROM Bike WHERE bike_rack_id = $1) AS num_bicicletas,
+                    (SELECT COUNT(*) FROM Rent WHERE bike_rack_id = $1 AND status = 'active') AS num_alugueis,
+                    (SELECT COALESCE(SUM(total_value), 0) FROM Rent WHERE bike_rack_id = $1 AND EXTRACT(MONTH FROM init_time) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM init_time) = EXTRACT(YEAR FROM CURRENT_DATE)) AS receita_mensal,
+                    (SELECT COUNT(*) FROM UserRole WHERE bike_rack_id = $1) AS num_clientes,
+                    (SELECT 
+                        CASE 
+                            WHEN COALESCE(prev_mes, 0) = 0 THEN 100
+                            ELSE ((curr_mes - prev_mes) / prev_mes::numeric) * 100
+                        END
+                    FROM (
+                        SELECT 
+                            (SELECT COALESCE(SUM(total_value), 0) 
+                            FROM Rent 
+                            WHERE bike_rack_id = $1 
+                            AND EXTRACT(MONTH FROM rent_date) = EXTRACT(MONTH FROM CURRENT_DATE) - 1
+                            AND EXTRACT(YEAR FROM rent_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+                            ) AS prev_mes,
+                            (SELECT COALESCE(SUM(total_value), 0) 
+                            FROM Rent 
+                            WHERE bike_rack_id = $1 
+                            AND EXTRACT(MONTH FROM rent_date) = EXTRACT(MONTH FROM CURRENT_DATE)
+                            AND EXTRACT(YEAR FROM rent_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+                            ) AS curr_mes
+                    ) t
+                    ) AS percent_aumento;
+                `, [id]
             );
         }catch(e){
-            throw {'error': e, 'message': 'Erro ao tentar listar Clientes por Bicicletário!'};
+            throw new BadGatewayException('Erro ao tentar buscar informações para tela principal!', e.message);
         }
     }
 
-    async employeesPerBikerack(){
+    async usersPerBikerack(){
         try{
             return await this.database.query(
                 `
-                SELECT br.bike_rack_id, br.name, COUNT(e.employee_id) AS employee_count
+                SELECT br.bike_rack_id, br.name, COUNT(e.user_id) AS user_count
                 FROM BikeRack br
-                LEFT JOIN Employee e ON br.bike_rack_id = e.bike_rack_id
+                LEFT JOIN Users e ON br.bike_rack_id = e.bike_rack_id
                 GROUP BY br.bike_rack_id, br.name
-                ORDER BY employee_count DESC
+                ORDER BY user_count DESC;
                 `
             );
         }catch(e){
@@ -170,13 +200,13 @@ export class BikerackService {
 
     async deleteAll(){  
         return await this.database.query(
-            `DELETE FROM BikeRack RETURNING *`
+            `DELETE FROM BikeRack RETURNING *;`
         );
     }
 
     async delete(id: Number){
         return await this.database.query(
-            `DELETE FROM BikeRack WHERE bikerack_id = $1 RETURNING *`, [id]
+            `DELETE FROM BikeRack WHERE bikerack_id = $1 RETURNING *;`, [id]
         );
     }
 }

@@ -9,7 +9,7 @@ export enum Role{
     ATTENDANT = 'attendant'
 }
 
-export default class EmployeeDto{
+export default class UserDto{
     @ApiProperty({
         description: 'Nome do Empregado',
         example: 'Marcelo da Silva'

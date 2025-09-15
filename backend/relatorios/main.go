@@ -5,7 +5,7 @@ import (
 	"log"
 	bikerackService "relatorios/service/bikeracks" 
 	clientService "relatorios/service/clients"
-	employeeService "relatorios/service/employees"
+	userService "relatorios/service/users"
 	rentService "relatorios/service/rents"
 )
 
