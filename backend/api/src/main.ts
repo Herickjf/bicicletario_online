@@ -7,6 +7,8 @@ import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors();
+
   const config = new DocumentBuilder()
     .setTitle("Bicicletário API")
     .setDescription("Interface de testes da API de Bicicletários")

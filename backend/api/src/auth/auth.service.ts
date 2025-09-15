@@ -16,8 +16,8 @@ export class AuthService {
     async validateUser(login: string, pass: string): Promise<any> {
         const query = `
             SELECT * 
-            FROM "User" 
-            WHERE login = $1 OR email = $1
+            FROM Users 
+            WHERE email = $1
         `;
         const values = [login];
         const result = await this.database.query(query, values);

@@ -2,6 +2,14 @@ import { ApiProperty } from "@nestjs/swagger";
 import { ValidateNested, IsInt, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class PlanDto {
+    @ApiProperty({
+        example: 1,
+        description: "ID do plano"
+    })
+    @IsInt()
+    @IsOptional()
+    plan_id?: number;
+
     @ApiProperty({ 
         example: "Plano Básico", 
         description: "Nome do plano" 

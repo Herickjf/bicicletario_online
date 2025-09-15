@@ -66,6 +66,8 @@ export class BikerackService {
             return `${col} = $${idx + 1}`;
         }).join(' AND ');
 
+        console.log(whereClauses);
+
         try{
             return await this.database.query(
                 `
@@ -96,29 +98,36 @@ export class BikerackService {
                 SELECT 
                     (SELECT COUNT(*) FROM Bike WHERE bike_rack_id = $1) AS num_bicicletas,
                     (SELECT COUNT(*) FROM Rent WHERE bike_rack_id = $1 AND status = 'active') AS num_alugueis,
-                    (SELECT COALESCE(SUM(total_value), 0) FROM Rent WHERE bike_rack_id = $1 AND EXTRACT(MONTH FROM init_time) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM init_time) = EXTRACT(YEAR FROM CURRENT_DATE)) AS receita_mensal,
-                    (SELECT COUNT(*) FROM UserRole WHERE bike_rack_id = $1) AS num_clientes,
-                    (SELECT 
-                        CASE 
+                    (SELECT COALESCE(SUM(total_value), 0)
+                    FROM Rent
+                    WHERE bike_rack_id = $1
+                    AND EXTRACT(MONTH FROM rent_date) = EXTRACT(MONTH FROM CURRENT_DATE)
+                    AND EXTRACT(YEAR FROM rent_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+                    ) AS receita_mensal,
+                    (SELECT COUNT(*) FROM UsersRole WHERE bike_rack_id = $1) AS num_clientes,
+                    (SELECT
+                        CASE
                             WHEN COALESCE(prev_mes, 0) = 0 THEN 100
                             ELSE ((curr_mes - prev_mes) / prev_mes::numeric) * 100
                         END
                     FROM (
-                        SELECT 
-                            (SELECT COALESCE(SUM(total_value), 0) 
-                            FROM Rent 
-                            WHERE bike_rack_id = $1 
-                            AND EXTRACT(MONTH FROM rent_date) = EXTRACT(MONTH FROM CURRENT_DATE) - 1
-                            AND EXTRACT(YEAR FROM rent_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+                        SELECT
+                            (SELECT COALESCE(SUM(total_value), 0)
+                            FROM Rent
+                            WHERE bike_rack_id = $1
+                                AND EXTRACT(MONTH FROM rent_date) = EXTRACT(MONTH FROM CURRENT_DATE) - 1
+                                AND EXTRACT(YEAR FROM rent_date) = EXTRACT(YEAR FROM CURRENT_DATE)
                             ) AS prev_mes,
-                            (SELECT COALESCE(SUM(total_value), 0) 
-                            FROM Rent 
-                            WHERE bike_rack_id = $1 
-                            AND EXTRACT(MONTH FROM rent_date) = EXTRACT(MONTH FROM CURRENT_DATE)
-                            AND EXTRACT(YEAR FROM rent_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+                            (SELECT COALESCE(SUM(total_value), 0)
+                            FROM Rent
+                            WHERE bike_rack_id = $1
+                                AND EXTRACT(MONTH FROM rent_date) = EXTRACT(MONTH FROM CURRENT_DATE)
+                                AND EXTRACT(YEAR FROM rent_date) = EXTRACT(YEAR FROM CURRENT_DATE)
                             ) AS curr_mes
                     ) t
                     ) AS percent_aumento;
+
+
                 `, [id]
             );
         }catch(e){
@@ -130,15 +139,59 @@ export class BikerackService {
         try{
             return await this.database.query(
                 `
-                SELECT br.bike_rack_id, br.name, COUNT(e.user_id) AS user_count
-                FROM BikeRack br
-                LEFT JOIN Users e ON br.bike_rack_id = e.bike_rack_id
-                GROUP BY br.bike_rack_id, br.name
-                ORDER BY user_count DESC;
+                SELECT ur.bike_rack_id AS id, br.name, COUNT(ur.user_id) AS num_usuarios
+                FROM UsersRole ur
+                INNER JOIN BikeRack br ON ur.bike_rack_id = br.bike_rack_id
+                GROUP BY ur.bike_rack_id, br.name;
                 `
             );
         }catch(e){
             throw {'error': e, 'message': 'Erro ao tentar listar Funcionários por Bicicletário!'};
+        }
+    }
+
+    async usersPerRole(){
+        try{
+            return await this.database.query(
+                `
+                SELECT role, COUNT(user_id) AS num_usuarios
+                FROM UsersRole
+                GROUP BY role;
+                `
+            );
+        }catch(e){
+            throw {'error': e, 'message': 'Erro ao tentar listar Usuários por Papel!'};
+        }
+    }
+
+    async userPerRolesBikerack(id_bikerack: number) {
+        try{
+            return await this.database.query(
+                `
+                SELECT ur.bike_rack_id AS id, ur.role, COUNT(ur.user_id) AS num_usuarios
+                FROM UsersRole ur
+                WHERE ur.bike_rack_id = $1
+                GROUP BY ur.bike_rack_id, ur.role;
+                `,
+                [id_bikerack]
+            );
+        }catch(e){
+            throw {'error': e, 'message': 'Erro ao tentar listar Usuários por Papel e Bicicletário!'};
+        }
+    }
+
+    async userBikeRacks(id_user: number) {
+        try {
+            return await this.database.query(
+                `
+                SELECT ur.bike_rack_id AS id, br.name
+                FROM UsersRole ur
+                INNER JOIN BikeRack br ON ur.bike_rack_id = br.bike_rack_id
+                WHERE user_id = $1;
+                `, [id_user]
+            );
+        } catch (e) {
+            throw new BadGatewayException('Erro ao tentar listar Bicicletários do Usuário!', e.message);
         }
     }
 

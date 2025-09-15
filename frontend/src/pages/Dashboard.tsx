@@ -39,6 +39,25 @@ const StatCard = ({ title, value, description, icon: Icon, trend }: {
   </Card>
 )
 
+const OptionCard = ({ title, description, href }: { title: string; description: string; href: string }) => (
+  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+    <CardHeader>
+      <CardTitle className="text-lg">{title}</CardTitle>
+      <CardDescription>{description}</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <Button variant="outline" asChild>
+        <Link to={href}>Ir</Link>
+      </Button>
+    </CardContent>
+  </Card>
+);
+
+interface BikeRack {
+  id: number;
+  name: string;
+}
+
 const QuickAction = ({ title, description, icon: Icon, href }: {
   title: string
   description: string
@@ -87,6 +106,7 @@ export default function Dashboard() {
   const [ alugueisInfo, setAlugueisInfo ] = useState<alugueis | null>(null);
   const [ receitaInfo, setReceitaInfo ] = useState<receita | null>(null);
   const [ clientesInfo, setClientesInfo ] = useState<clientes | null>(null);
+  const [ bikeRacks, setBikeRacks ] = useState<BikeRack[]>([]);
 
   if (!user) return null
 
@@ -96,6 +116,7 @@ export default function Dashboard() {
     fetch(`http://localhost:4000/bikerack/mainScreenInfo/${user.bike_rack_id}`)
       .then(res => res.json())
       .then(data => {
+        console.log(data)
         setBicicletasInfo({num_bicicletas: data.num_bicicletas});
         setAlugueisInfo({num_alugueis: data.num_alugueis});
         setReceitaInfo({receita_mensal: data.receita_mensal, percent_aumento: data.percent_aumento});
@@ -104,10 +125,18 @@ export default function Dashboard() {
       .catch(err => console.error('Erro ao buscar informações das bicicletas:', err));
       // ISSUE #1: Trocar console.error por notificação
 
+      fetch(`http://localhost:4000/bikerack/userBikeRacks/${user.user_id}`)
+      .then(res => res.json())
+      .then(data => {
+        setBikeRacks(data);
+      })
+      .catch(err => console.error('Erro ao buscar informações dos bicicletários:', err));
+
   }, [])
 
   const renderOwnerDashboard = () => (
     <>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Bicicletas Cadastradas"
@@ -124,7 +153,7 @@ export default function Dashboard() {
         <StatCard
           title="Receita Mensal"
           value={`R$ ${receitaInfo ? receitaInfo.receita_mensal : 0.0}`}
-          description=" desde o último mês"
+          description=" desde o início do mês"
           icon={DollarSign}
           trend={`+${receitaInfo ? receitaInfo.percent_aumento : 0.0}%`}
         />
@@ -359,6 +388,43 @@ export default function Dashboard() {
             {user.role === 'customer' && 'Suas atividades e opções'}
           </p>
         </div>
+
+        {!user.bike_rack_id ? (
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+              <OptionCard
+                title="Participar de um BikeRack"
+                description="Escolha um bicicletário existente para se juntar e começar a alugar bicicletas."
+                href="/join-rack"
+              />
+              <OptionCard
+                title="Criar um BikeRack"
+                description="Crie seu próprio bicicletário e gerencie bicicletas, aluguéis e clientes."
+                href="/create-rack"
+              />
+            </div>
+
+            {bikeRacks.length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-2xl font-semibold mb-2">Bicicletários que você participa</h2>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {bikeRacks.map(rack => (
+                    <Card key={rack.id}>
+                      <CardHeader>
+                        <CardTitle>{rack.name}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Button variant="outline" onClick={() => user.bike_rack_id=rack.id} asChild>
+                          Acessar Bicicletário
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : null}
 
         {user.role === 'owner' && renderOwnerDashboard()}
         {user.role === 'manager' && renderManagerDashboard()}

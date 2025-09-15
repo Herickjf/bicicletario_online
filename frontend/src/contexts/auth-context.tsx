@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserRole, User } from '@/types';
+import { set } from 'date-fns';
 
 interface AuthUser extends User {
   role: UserRole;
@@ -31,27 +32,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulated login - replace with real API call
     try {
-      // Mock user data for demo
-      const mockUser: AuthUser = {
-        user_id: 1,
-        name: 'João Silva',
-        email: email,
-        cpf: '12345678901',
-        phone: '11999999999',
-        address_id: 1,
-        role: 'owner', // You can change this to test different roles
-        bike_rack_id: 1,
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('bikerack_user', JSON.stringify(mockUser));
-      setIsLoading(false);
+      const response = await fetch('http://localhost:4000/user/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+
+      console.log('Login response data:', data);
+
+      // Atualiza estado com usuário autenticado
+      setUser({
+        role: data[0].role,
+        bike_rack_id: data[0].bike_rack_id,
+        user_id: data[0].user_id,
+        name: data[0].name,
+        email: data[0].email,
+        cpf: data[0].cpf,
+        phone: data[0].phone,
+        address: data[0].address_id ? {
+          address_id: data[0].address_id,
+          street: data[0].street,
+          num: data[0].num,
+          zip_code: data[0].zip_code,
+          city: data[0].city,
+          state: data[0].state,
+        } : undefined,
+      } as AuthUser);
+
+      // Salva no localStorage
+      localStorage.setItem('bikerack_user', JSON.stringify(user));
+
       return true;
     } catch (error) {
-      setIsLoading(false);
+      console.error('Error during login:', error);
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 

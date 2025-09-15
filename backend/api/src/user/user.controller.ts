@@ -16,6 +16,16 @@ export class UserController {
         return await this.service.create(cliente);
     }
 
+    // Rota temporária, é pra estar em auth
+    @Post('/login')
+    @ApiOperation({
+        summary: 'Login de Users',
+        description: 'Realiza o login de um User já cadastrado no sistema'
+    })
+    async login(@Body() body: {email: string, password: string}){
+        return await this.service.login(body.email, body.password);
+    }
+
     @Post('setRole')
     @ApiOperation({
         summary: 'Definição de Papel para User',

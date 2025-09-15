@@ -21,6 +21,30 @@ export class PlanService {
     }
   }
 
+  async search(id_bike_rack: number, filtros: {[key: string]: any}) {
+    const whereClause = Object.keys(filtros).map((key, index) => {
+      if(typeof filtros[key] === 'string') {
+        return `${key} ILIKE $${index + 2}`;
+      } else{
+        return `${key} = $${index + 2}`;
+      }
+    }).join(' AND ');
+
+    const values = [id_bike_rack, ...Object.values(filtros)];
+
+    console.log(whereClause);
+
+    try {
+      const query = `SELECT * FROM Plan WHERE bike_rack_id = $1` + (whereClause ? ` AND ${whereClause}` : '');
+      return await this.database.query(query, values);
+    } catch (e) {
+      throw new BadRequestException({
+        error: e,
+        message: 'Erro ao buscar plano do bicicletário',
+      });
+    }
+  }
+
   async deletePlan(id_bike_rack: number, id_plan: number) {
     try {
       return await this.database.query(
@@ -47,7 +71,7 @@ export class PlanService {
           plan.name,
           plan.description ?? null,
           plan.price,
-          plan.active ?? true,
+          plan.isActive ?? true,
           plan.bike_rack_id,
         ],
       );
@@ -75,7 +99,7 @@ export class PlanService {
           plan.name,
           plan.description ?? null,
           plan.price,
-          plan.active ?? true,
+          plan.isActive ?? true,
           plan.plan_id,
           plan.bike_rack_id,
         ],

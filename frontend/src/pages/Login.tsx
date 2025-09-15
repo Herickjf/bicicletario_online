@@ -66,14 +66,34 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      // Simulated registration - replace with real API call
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Você pode fazer login agora.",
+      fetch("http://localhost:4000/user/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          cpf: formData.cpf,
+          phone: formData.phone,
+          role: formData.role,
+        })
       })
-      
-      // Switch to login tab after successful registration
-      // document.querySelector('[value="login"]')?.click()
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Erro ao cadastrar")
+        }
+        return response.json()
+      })
+      .then(data => {
+        toast({
+          title: "Cadastro realizado com sucesso!",
+          description: "Você já pode entrar no sistema.",
+        })
+        navigate("/")
+      })
+
     } catch (error) {
       toast({
         title: "Erro no cadastro",

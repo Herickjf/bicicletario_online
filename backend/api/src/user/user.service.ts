@@ -1,4 +1,4 @@
-import { BadGatewayException, Injectable } from '@nestjs/common';
+import { BadGatewayException, Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import UserDto from '../dtos/User.dto';
 
@@ -11,12 +11,13 @@ export class UserService {
         let ret: any;
 
         try{
-            ret = await this.database.query(
-                `
-                INSERT INTO Address (street, num, zip_code, city, state)
-                VALUES ($1, $2, $3, $4, $5)
-                RETURNING address_id
-                `, cliente.address);
+            if (cliente.address)
+                ret = await this.database.query(
+                    `
+                    INSERT INTO Address (street, num, zip_code, city, state)
+                    VALUES ($1, $2, $3, $4, $5)
+                    RETURNING address_id
+                    `, cliente.address);
         }catch(e){
             throw new BadGatewayException('Erro ao tentar cadastrar endereço');
         }
@@ -26,12 +27,13 @@ export class UserService {
         try{
             return await this.database.query(
                 `
-                INSERT INTO Users (name, email, cpf, phone, address_id)
-                VALUES ($1, $2, $3, $4)
-                RETURNING *
+                INSERT INTO Users (name, email, password, cpf, phone, address_id)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING *;
                 `, [
                     cliente.name,
                     cliente.email,
+                    cliente.password,
                     cliente.cpf,
                     cliente.phone,
                     address_id
@@ -42,11 +44,32 @@ export class UserService {
         }
     }
 
+    async login(email: string, password: string){
+        try{
+            const result = await this.database.query(
+                `
+                SELECT ur.bike_rack_id, ur.role, u.*, a.*
+                FROM Users u
+                LEFT JOIN Address a ON u.address_id = a.address_id
+                LEFT JOIN UsersRole ur ON u.user_id = ur.user_id
+                WHERE u.email = $1 AND u.password = $2;
+                `, [email, password]
+            );
+            if(result.length > 0){
+                return result;
+            }
+            throw new NotFoundException('Usuário ou senha inválidos!');
+        }catch(e){
+            throw new NotFoundException('Erro ao tentar realizar login:' + e.message);
+        }
+    }
+        
+
     async setRole(id_user: number, id_bikerack: number, role: "owner" | "attendant" | "customer" | "manager"){
         try{
             return await this.database.query(
                 `
-                INSERT INTO UserRole (user_id, bike_rack_id, role)
+                INSERT INTO UsersRole (user_id, bike_rack_id, role)
                 VALUES ($1, $2, $3)
                 RETURNING *
                 `, [id_user, id_bikerack, role]
@@ -60,7 +83,7 @@ export class UserService {
         try{
             return await this.database.query(
                 `
-                DELETE FROM UserRole
+                DELETE FROM UsersRole
                 WHERE user_id = $1 AND bike_rack_id = $2
                 RETURNING *
                 `, [id_user, id_bikerack]
@@ -76,7 +99,7 @@ export class UserService {
                 `
                 SELECT u.*, a.*
                 FROM Users u
-                LEFT JOIN Address a ON c.address_id = a.address_id
+                LEFT JOIN Address a ON u.address_id = a.address_id
                 `
             );
         }catch(e){
@@ -95,7 +118,7 @@ export class UserService {
                 `
                 SELECT u.*, a.*
                 FROM Users u
-                LEFT JOIN Address a ON c.address_id = a.address_id
+                LEFT JOIN Address a ON u.address_id = a.address_id
                 WHERE ${where}
                 `, values
             );

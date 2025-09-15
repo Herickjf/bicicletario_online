@@ -23,6 +23,15 @@ export default class UserDto{
     email: string;
 
     @ApiProperty({
+        description: 'Senha do User',
+        example: 'senha123'
+    })
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(250)
+    password: string;
+
+    @ApiProperty({
         description: 'CPF do User',
         example: '12345678901'
     })
@@ -47,6 +56,15 @@ export default class UserDto{
     @ValidateNested()
     @IsOptional()
     @Type(() => AddressDto)
-    address: AddressDto;
+    address?: AddressDto;
+
+    @ApiProperty({
+        description: 'Role do User',
+        example: 'owner',
+        enum: ['owner', 'attendant', 'customer', 'manager']
+    })
+    @IsOptional()
+    @IsString()
+    role?: "owner" | "attendant" | "customer" | "manager";
 
 }

@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Get, Delete, Patch, BadRequestException, Param } from '@nestjs/common';
 import { BikerackService } from './bikerack.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
 import BikeRackDto from 'src/dtos/BikeRack.dto';
 
 @ApiTags('bikeracks')
@@ -31,6 +31,12 @@ export class BikerackController {
         summary: 'Busca de Bicicletários',
         description: 'Busca um bicicletário específico por uma sequência de campos e valores'
     })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            example: { name: 'Bicicletário Central', city: 'São Paulo', street: 'Avenida' }
+        }
+    })
     async search(@Body() filter: {[key: string]: any}){
         return await this.service.search(filter);
     }
@@ -52,6 +58,33 @@ export class BikerackController {
     })
     async usersPerBikerack(){
         return await this.service.usersPerBikerack();
+    }
+
+    @Get('usersPerRole')
+    @ApiOperation({
+        summary: 'Listagem de Funcionários por Papel',
+        description: 'Lista a quantidade de funcionários cadastrados em cada papel (role), agrupados por bicicletário'
+    })
+    async usersPerRole(){
+        return await this.service.usersPerRole();
+    }
+
+    @Get('userPerRolesBikerack/:id')
+    @ApiOperation({
+        summary: 'Listagem de Usuários por Papel e Bicicletário',
+        description: 'Lista a quantidade de usuários cadastrados em cada papel (role), para um bicicletário específico'
+    })
+    async userPerRolesBikerack(@Param('id') id_bikerack: number){
+        return await this.service.userPerRolesBikerack(id_bikerack);
+    }
+
+    @Get('userBikeRacks/:id')
+    @ApiOperation({
+        summary: 'Bicicletários de um Usuário',
+        description: 'Lista os bicicletários associados a um usuário específico'
+    })
+    async userBikeRacks(@Param('id') id_user: number){
+        return await this.service.userBikeRacks(id_user);
     }
 
     @Patch('update/:id')
