@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* BikeRack Management System Design System */
+
+@layer base {
+  :root {
+    /* Light mode colors based on specified palette */
+    --background: 0 0% 98%;
+    --foreground: 213 100% 18%; /* #003D5B */
+    
+    /* Brand colors from palette - Ajustadas para melhor contraste */
+    --primary: 202 80% 36%; /* #00798C ajustado */
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 213 66% 37%; /* #30638E */
+    
+    --secondary: 38 83% 55%; /* #EDAE49 ajustado */
+    --secondary-foreground: 213 100% 18%;
+    
+    --accent: 353 70% 50%; /* #D1495B ajustado */
+    --accent-foreground: 0 0% 100%;
+    
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 83% 55%; /* Usando a mesma do secondary */
+    --warning-foreground: 213 100% 18%;
+    
+    --destructive: 353 70% 50%; /* Usando a mesma do accent */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* UI Elements */
+    --card: 0 0% 100%;
+    --card-foreground: 213 100% 18%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 100% 18%;
+    
+    --muted: 213 15% 94%;
+    --muted-foreground: 213 30% 45%;
+    
+    --border: 213 20% 88%;
+    --input: 213 20% 88%;
+    --ring: 202 80% 36%; /* Corrigido para match com primary */
+    
+    --radius: 0.75rem;
+    
+    /* Status colors */
+    --status-available: 142 76% 36%;
+    --status-rented: 353 70% 50%;
+    --status-maintenance: 38 83% 55%;
+  }
+
+  .dark {
+    /* Dark mode - cores ajustadas para melhor contraste no escuro */
+    --background: 213 100% 8%;
+    --foreground: 0 0% 98%;
+    
+    --primary: 202 80% 44%; /* #00798C mais claro para dark mode */
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 213 66% 45%;
+    
+    --secondary: 38 83% 62%; /* #EDAE49 mais claro para dark mode */
+    --secondary-foreground: 213 100% 10%;
+    
+    --accent: 353 70% 58%; /* #D1495B mais claro para dark mode */
+    --accent-foreground: 0 0% 100%;
+    
+    --success: 142 76% 44%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 83% 62%;
+    --warning-foreground: 213 100% 10%;
+    
+    --destructive: 353 70% 58%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --card: 213 100% 10%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 213 100% 10%;
+    --popover-foreground: 0 0% 95%;
+    
+    --muted: 213 100% 15%;
+    --muted-foreground: 0 0% 65%;
+    
+    --border: 213 100% 20%;
+    --input: 213 100% 20%;
+    --ring: 202 80% 44%;
+    
+    --status-available: 142 76% 44%;
+    --status-rented: 353 70% 58%;
+    --status-maintenance: 38 83% 62%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
+  }
+  
+  .gradient-secondary {
+    background: linear-gradient(135deg, hsl(var(--secondary)), oklch(from var(--secondary) l c calc(h - 10deg)));
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, hsl(var(--accent)), oklch(from var(--accent) l c calc(h - 10deg)));
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors;
+  }
+  
+  .btn-destructive {
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors;
+  }
+}
