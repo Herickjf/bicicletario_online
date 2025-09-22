@@ -82,8 +82,10 @@ export class UserController {
     @ApiBody({
         schema: {
             type: 'object',
-            properties: {
-                filter: { type: 'object' }
+            additionalProperties: true,
+            example: {
+                "email": "user20",
+                "cpf": 20120220304
             }
         }
     })

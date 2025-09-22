@@ -58,13 +58,4 @@ export default class UserDto{
     @Type(() => AddressDto)
     address?: AddressDto;
 
-    @ApiProperty({
-        description: 'Role do User',
-        example: 'owner',
-        enum: ['owner', 'attendant', 'customer', 'manager']
-    })
-    @IsOptional()
-    @IsString()
-    role?: "owner" | "attendant" | "customer" | "manager";
-
 }

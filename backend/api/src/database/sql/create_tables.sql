@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS BikeRack(
     image        TEXT DEFAULT 'default_bike_rack_img.svg',
     address_id   INTEGER DEFAULT NULL,
     PRIMARY KEY (bike_rack_id),
+    cnpj         VARCHAR(14) DEFAULT NULL,
     CONSTRAINT fk_address
         FOREIGN KEY(address_id)
         REFERENCES Address(address_id)

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CheckBox } from "shadcn/ui/checkbox"
+
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
 import { Bike, Eye, EyeOff } from "lucide-react"
@@ -78,7 +78,7 @@ export default function Login() {
           name: formData.name,
           cpf: formData.cpf,
           phone: formData.phone,
-          role: formData.role,
+          // role: formData.role,
         })
       })
       .then(response => {
@@ -238,29 +238,9 @@ export default function Login() {
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="register-role">Tipo de usuário</Label>
-
-                    <div className="flex flex-col space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="costumer"
-                            checked={formData.role === "costumer"}
-                            onCheckedChange={() => setFormData({...formData, role: "costumer"})}
-                          />
-                          <Label htmlFor="costumer">Cliente</Label>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="owner"
-                            checked={formData.role === "owner"}
-                            onCheckedChange={() => setFormData({...formData, role: "owner"})}
-                          />
-                          <Label htmlFor="owner">Proprietário de Bicicletário</Label>
-                        </div>
-                    </div>
-                    {/* <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                    <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
@@ -268,8 +248,8 @@ export default function Login() {
                         <SelectItem value="customer">Cliente</SelectItem>
                         <SelectItem value="owner">Proprietário de Bicicletário</SelectItem>
                       </SelectContent>
-                    </Select> */}
-                  </div>
+                    </Select>
+                  </div> */}
 
                   <div className="space-y-2">
                     <Label htmlFor="register-password">Senha</Label>

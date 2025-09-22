@@ -15,7 +15,7 @@ import Plans from "./pages/Plans";
 import NotFound from "./pages/NotFound";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
-import Cadastrar from "./pages/Cadastrar";
+// import Cadastrar from "./pages/Cadastrar";
 
 const queryClient = new QueryClient();
 

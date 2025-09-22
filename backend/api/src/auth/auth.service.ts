@@ -13,13 +13,13 @@ interface JwtPayload {
 export class AuthService {
     constructor(private jwtService: JwtService, private readonly database: DatabaseService) {}
 
-    async validateUser(login: string, pass: string): Promise<any> {
+    async validateUser(email: string, pass: string): Promise<any> {
         const query = `
-            SELECT * 
+            SELECT 1 
             FROM Users 
             WHERE email = $1
         `;
-        const values = [login];
+        const values = [email];
         const result = await this.database.query(query, values);
         
         if (result.length === 0) {
@@ -36,8 +36,8 @@ export class AuthService {
     }
 
     async login(loginDto: LoginDto): Promise<any> {
-        const user = await this.validateUser(loginDto.login, loginDto.password);
-
+        const user = await this.validateUser(loginDto.email, loginDto.password);
+        console.log(user);
         const payload: JwtPayload = { username: user.username, sub: user.id };
         const access_token = this.jwtService.sign(payload);
         return { access_token: access_token };
