@@ -161,3 +161,50 @@ CREATE TABLE IF NOT EXISTS Rent(
         REFERENCES BikeRack(bike_rack_id)
         ON DELETE CASCADE
 );
+
+-- ===========================
+-- NOTIFICAÇÃO
+-- ===========================
+CREATE TABLE IF NOT EXISTS Notification(
+    notification_id SERIAL,
+    title           VARCHAR(200) NOT NULL,
+    message         TEXT NOT NULL,
+    read            BOOLEAN DEFAULT FALSE,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    recipient_id    INTEGER NOT NULL,
+    sender_id       INTEGER DEFAULT NULL,
+    PRIMARY KEY (notification_id),
+    CONSTRAINT fk_user
+        FOREIGN KEY (user_id)
+        REFERENCES Users(user_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_sender
+        FOREIGN KEY (sender_id)
+        REFERENCES Users(user_id)
+        ON DELETE SET NULL,
+    CONSTRAINT fk_recipient
+        FOREIGN KEY (recipient_id)
+        REFERENCES Users(user_id)
+        ON DELETE CASCADE
+);
+
+-- ===========================
+-- Avaliacoes
+-- ===========================
+CREATE TABLE IF NOT EXISTS Review(
+    review_id       SERIAL,
+    rating          INTEGER CHECK (rating >= 1 AND rating <= 5),
+    comment         TEXT DEFAULT NULL,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_id         INTEGER NOT NULL,
+    bike_rack_id    INTEGER NOT NULL,
+    PRIMARY KEY (review_id),
+    CONSTRAINT fk_user
+        FOREIGN KEY (user_id)
+        REFERENCES Users(user_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_bike_rack
+        FOREIGN KEY (bike_rack_id)
+        REFERENCES BikeRack(bike_rack_id)
+        ON DELETE CASCADE
+);

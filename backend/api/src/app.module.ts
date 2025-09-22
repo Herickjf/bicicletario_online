@@ -13,10 +13,16 @@ import { AuthModule } from './auth/auth.module';
 import { PlanService } from './plan/plan.service';
 import { PlanController } from './plan/plan.controller';
 import { PlanModule } from './plan/plan.module';
+import { NotificationController } from './notification/notification.controller';
+import { NotificationService } from './notification/notification.service';
+import { NotificationModule } from './notification/notification.module';
+import { ReviewService } from './review/review.service';
+import { ReviewController } from './review/review.controller';
+import { ReviewModule } from './review/review.module';
 
 @Module({
-  imports: [DatabaseModule, BikerackModule, UserModule, AuthModule, PlanModule],
-  controllers: [AppController, UserController, AuthController, PlanController],
-  providers: [AppService, BikerackService, UserService, AuthService, PlanService],
+  imports: [DatabaseModule, BikerackModule, UserModule, AuthModule, PlanModule, NotificationModule, ReviewModule],
+  controllers: [AppController, UserController, AuthController, PlanController, NotificationController, ReviewController],
+  providers: [AppService, BikerackService, UserService, AuthService, PlanService, NotificationService, ReviewService],
 })
 export class AppModule {}
