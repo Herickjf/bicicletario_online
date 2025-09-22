@@ -1,6 +1,8 @@
-import { BadGatewayException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import UserDto from '../dtos/User.dto';
+import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class UserService {
@@ -9,6 +11,8 @@ export class UserService {
     async create(cliente: UserDto){
         let address_id: number;
         let ret: any;
+        const saltRounds = 10;
+        let hashedPassword = await bcrypt.hash(cliente.password, saltRounds);
 
         try{
             if (cliente.address)
@@ -33,14 +37,14 @@ export class UserService {
                 `, [
                     cliente.name,
                     cliente.email,
-                    cliente.password,
+                    hashedPassword,
                     cliente.cpf,
                     cliente.phone,
                     address_id
                 ]
             );
         }catch(e){
-            throw new BadGatewayException('Erro ao tentar cadastrar User!');
+            throw new BadRequestException(e.message);
         }
     }
 

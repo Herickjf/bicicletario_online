@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserRole, User } from '@/types';
 import { set } from 'date-fns';
+import { Accessibility } from 'lucide-react';
 
 interface AuthUser extends User {
   role: UserRole;
@@ -45,30 +46,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = await response.json();
+ 
+      localStorage.setItem("token", data.access_token);
 
       console.log('Login response data:', data);
 
       // Atualiza estado com usuário autenticado
       setUser({
-        role: data[0].role,
-        bike_rack_id: data[0].bike_rack_id,
-        user_id: data[0].user_id,
-        name: data[0].name,
-        email: data[0].email,
-        cpf: data[0].cpf,
-        phone: data[0].phone,
-        address: data[0].address_id ? {
-          address_id: data[0].address_id,
-          street: data[0].street,
-          num: data[0].num,
-          zip_code: data[0].zip_code,
-          city: data[0].city,
-          state: data[0].state,
+        user_id: data.user.user_id,
+        name: data.user.name,
+        email: data.user.email,
+        cpf: data.user.cpf,
+        phone: data.user.phone,
+        address: data.user.address_id ? {
+          address_id: data.user.address_id,
+          street: data.user.street,
+          num: data.user.num,
+          zip_code: data.user.zip_code,
+          city: data.user.city,
+          state: data.user.state,
         } : undefined,
       } as AuthUser);
 
       // Salva no localStorage
-      localStorage.setItem('bikerack_user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(user));
 
       return true;
     } catch (error) {
