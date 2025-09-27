@@ -74,6 +74,36 @@ export class UserController {
         return await this.service.list();
     }
 
+    @Get('role/:bike_rack_id/:user_id')
+    @ApiOperation({
+        summary: 'Busca da Role de um Usuário em um Bicicletário',
+        description: 'Dado um usuário e um bicicletário, busca pela Role desse usuário.'
+    })
+    async role(
+        @Param('bike_rack_id') bike_rack_id: number,
+        @Param('user_id') user_id: number
+    ){
+        return await this.service.role(bike_rack_id, user_id);
+    }
+
+    @Get('listBikeracks/:id_user')
+    @ApiOperation({
+        summary: 'Listagem de Bicicletarios de um Usuario',
+        description: 'Lista todos os bicicletarios que um usuario participa'
+    })
+    async listBikeracks(@Param('id_user') id_user: number){
+        return await this.service.listBikeracks(id_user);
+    }
+
+    @Get('listBikeracksWhereIsOwner/:id_user')
+    @ApiOperation({
+        summary: 'Listagem de Bicicletarios onde é Proprietário',
+        description: 'Lista todos os bicicletarios onde o user tem role owner'
+    })
+    async listBikeracksWhereIsOwner(@Param('id_user') id_user: number){
+        return await this.service.listBikeracksWhereIsOwner(id_user);
+    }
+
     @Post('search')
     @ApiOperation({
         summary: 'Busca de Users',

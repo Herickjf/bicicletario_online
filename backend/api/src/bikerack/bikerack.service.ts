@@ -124,11 +124,11 @@ export class BikerackService {
     async mainScreenInfo(id: number){
         /*
            Retorna as informacoes principais da tela inicial:
-           - Quantidade de bicicletas cadastradas no bicicletario
-           - Quantidade de alugueis ativos no bicicletario
-           - Renda mensal do bicicletario
-           - Quantidade de usuarios cadastrados no bicicletario       
-           - Percentual de aumento da renda mensal em relacao ao mes anterior
+           - num_bicicletas: Quantidade de bicicletas cadastradas no bicicletario
+           - num_alugueis: Quantidade de alugueis ativos no bicicletario
+           - receita_mensal: Renda mensal do bicicletario
+           - num_clientes: Quantidade de usuarios cadastrados no bicicletario       
+           - percent_aumento: Percentual de aumento da renda mensal em relacao ao mes anterior
         */
 
         try{
@@ -170,7 +170,7 @@ export class BikerackService {
                 `, [id]
             );
         }catch(e){
-            throw new BadGatewayException('Erro ao tentar buscar informações para tela principal!', e.message);
+            throw new BadRequestException('Erro ao tentar buscar informações para tela principal!', e.message);
         }
     }
 
@@ -345,7 +345,7 @@ export class BikerackService {
 
     async delete(id: Number){
         return await this.database.query(
-            `DELETE FROM BikeRack WHERE bikerack_id = $1 RETURNING *;`, [id]
+            `DELETE FROM BikeRack WHERE bike_rack_id = $1 RETURNING *;`, [id]
         );
     }
 

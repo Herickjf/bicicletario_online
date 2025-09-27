@@ -37,6 +37,7 @@ export default function Login() {
     setIsLoading(true)
 
     try {
+      // console.log(formData)
       const success = await login(formData.email, formData.password)
       if (success) {
         toast({
@@ -94,7 +95,6 @@ export default function Login() {
         })
         navigate("/")
       })
-
     } catch (error) {
       toast({
         title: "Erro no cadastro",

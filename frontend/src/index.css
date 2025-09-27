@@ -18,13 +18,14 @@
     --secondary: 38 83% 55%; /* #EDAE49 ajustado */
     --secondary-foreground: 213 100% 18%;
     
-    --accent: 353 70% 50%; /* #D1495B ajustado */
+    --accent: 142 76% 36%;
+    /* --accent: 353 70% 50%; #D1495B ajustado */
     --accent-foreground: 0 0% 100%;
     
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 83% 55%; /* Usando a mesma do secondary */
+    --warning: 353 70% 50%;
     --warning-foreground: 213 100% 18%;
     
     --destructive: 353 70% 50%; /* Usando a mesma do accent */
@@ -61,16 +62,16 @@
     --primary-foreground: 0 0% 100%;
     --primary-light: 213 66% 45%;
     
-    --secondary: 38 83% 62%; /* #EDAE49 mais claro para dark mode */
+    --secondary: 202 80% 44%; 
     --secondary-foreground: 213 100% 10%;
     
-    --accent: 353 70% 58%; /* #D1495B mais claro para dark mode */
+    --accent: 142 76% 36%; 
     --accent-foreground: 0 0% 100%;
     
     --success: 142 76% 44%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 83% 62%;
+    --warning: 38 83% 55%;
     --warning-foreground: 213 100% 10%;
     
     --destructive: 353 70% 58%;

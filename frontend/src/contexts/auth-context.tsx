@@ -12,26 +12,46 @@ interface AuthContextType {
   user: AuthUser | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  isLoading: boolean;
+  authLoading: boolean;
+  userRole: UserRole;
+  changeUserRole: (role: UserRole) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState<UserRole>("customer");
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    // Simulated auth check - replace with real API call
-    const savedUser = localStorage.getItem('bikerack_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
+    setAuthLoading(true);
+
+    const userData = JSON.parse(localStorage.getItem('user') || 'null')
+
+    if(!userData) return;
+
+    setUser({
+      user_id: Number(userData.user_id),
+      name: userData.name,
+      email: userData.email,
+      cpf: userData.cpf,
+      phone: userData.phone,
+      address: userData.address_id ? {
+        address_id: userData.address_id,
+        street: userData.street,
+        num: userData.num,
+        zip_code: userData.zip_code,
+        city: userData.city,
+        state: userData.state,
+      } : undefined,
+    } as AuthUser)
+    
+    setAuthLoading(false);
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
+    setAuthLoading(true);
     
     try {
       const response = await fetch('http://localhost:4000/auth/login', {
@@ -39,7 +59,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
 
       if (!response.ok) {
         throw new Error('Login failed');
@@ -49,10 +68,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  
       localStorage.setItem("token", data.access_token);
 
-      console.log('Login response data:', data);
+      // console.log('Login response data:', data);
 
       // Atualiza estado com usuário autenticado
-      setUser({
+      const userData = {
         user_id: data.user.user_id,
         name: data.user.name,
         email: data.user.email,
@@ -66,27 +85,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           city: data.user.city,
           state: data.user.state,
         } : undefined,
-      } as AuthUser);
+      };
+
+      setUser(userData as AuthUser);
 
       // Salva no localStorage
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(userData));
 
       return true;
     } catch (error) {
       console.error('Error during login:', error);
       return false;
     } finally {
-      setIsLoading(false);
+      setAuthLoading(false);
     }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('bikerack_user');
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
+  const changeUserRole = (role: UserRole) => {
+    setUserRole(role);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, authLoading, userRole, changeUserRole }}>
       {children}
     </AuthContext.Provider>
   );

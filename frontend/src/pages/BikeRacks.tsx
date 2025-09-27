@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,92 +9,226 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, MapPin, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, Building2, Bike, List, SquarePlus, CircleUserRound, Crown, CrownIcon, Bolt, Package } from "lucide-react";
+import { BikeRackType, useBikeRacks } from "@/contexts/bikerack-context";
+import { useAuth } from "@/contexts/auth-context";
+import { Link, useNavigate } from "react-router-dom";
+import { ScrollArea } from "@radix-ui/react-scroll-area";
+import { UserRole } from "@/types";
 
 interface BikeRack {
   id: number;
   name: string;
-  address: string;
+  role?: UserRole
+  street: string;
+  number: number | null;
   city: string;
   state: string;
   zipCode: string;
-  totalBikes: number;
-  availableBikes: number;
   image?: string;
 }
 
+const roleColors = {
+  customer: "bg-primary text-primary-foreground",
+  owner: "bg-success text-success-foreground",
+  manager: "bg-secondary text-secondary-foreground",
+  attendant: "bg-destructive text-destructive-foreground",
+}
+
+const roleLabels = {
+  customer: "Cliente",
+  owner: "Proprietário", 
+  manager: "Gerente", 
+  attendant: "Atendente",
+}
+
+const roleIcons = {
+  customer: CircleUserRound,
+  owner: CrownIcon,
+  manager: Bolt,
+  attendant: Package,
+}
+
+export const QuickAction = ({ title, description, icon: Icon, href, onClick, btnText, role}: {
+  title: string
+  description: string
+  icon: any
+  href?: string
+  onClick?: () => void
+  btnText?: string
+  role?: UserRole
+}) => {
+  const RoleIcon = role ? roleIcons[role] : null;
+
+  return (
+    <Card 
+      className="hover:shadow-md transition-shadow cursor-pointer"
+      onClick={onClick}
+    >
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col items-left gap-3">
+            <div className="flex items-center space-x-2">
+              <div className="h-10 w-10 rounded-sm bg-primary/10 flex items-center justify-center">
+                <Icon className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-base">{title}</CardTitle>
+            </div>
+            <CardDescription>{description}</CardDescription>
+          </div>
+          {role &&
+            <Badge className={roleColors[role]}>
+              {RoleIcon && <RoleIcon className="h-3 w-3 mr-1" />}
+              {roleLabels[role]}
+            </Badge>
+          }
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Button variant="outline" size="sm" asChild>
+          <Link to={href}>{btnText? btnText :"Acessar"}</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+const OptionCard = ({ title, description, onCLickFunction }: { title: string; description: string; onCLickFunction: () => void }) => (
+  <Card className="hover:shadow-md transition-shadow">
+    <CardHeader>
+      <CardTitle className="text-lg">{title}</CardTitle>
+      <CardDescription>{description}</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <Button variant="outline" asChild onClick={() => onCLickFunction}>
+        Adicionar
+      </Button>
+    </CardContent>
+  </Card>
+);
+
 const BikeRacks = () => {
+  const nav = useNavigate();
+
   const { toast } = useToast();
-  const [bikeRacks, setBikeRacks] = useState<BikeRack[]>([
-    {
-      id: 1,
-      name: "Centro - Praça da Sé",
-      address: "Praça da Sé, 100",
-      city: "São Paulo",
-      state: "SP",
-      zipCode: "01001-000",
-      totalBikes: 20,
-      availableBikes: 15,
-    },
-    {
-      id: 2,
-      name: "Ibirapuera - Portão 2",
-      address: "Av. Paulista, 1578",
-      city: "São Paulo", 
-      state: "SP",
-      zipCode: "04038-001",
-      totalBikes: 15,
-      availableBikes: 8,
-    },
-  ]);
+  const { user, authLoading } = useAuth()
+  const {
+    currentBikeRack,
+    userBikeRacks,
+    bikeRackLoading,
+    createBikeRack,
+    selectBikeRack,
+    refetch,
+  } = useBikeRacks();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isListOpen, setIsListOpen] = useState(false);
   const [editingBikeRack, setEditingBikeRack] = useState<BikeRack | null>(null);
   const [formData, setFormData] = useState({
     name: "",
-    address: "",
+    street: "",
+    num: null,
     city: "",
     state: "",
     zipCode: "",
   });
+  const [newBikeRacksList, setNewBikeRacksList] = useState<BikeRack[]>([]);
+  
+  useEffect(() => {
+    fetchNewBikeRacks();
+  }, [createBikeRack, userBikeRacks])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const fetchNewBikeRacks = async () => {
+    try {
+      const res = await fetch(`http://localhost:4000/user/notRelatedBikerack/${user.user_id}`);
+      
+      if(!res.ok) {
+        toast({
+          title: "Erro ao buscar bicicletários!",
+          description: "Problemas ao procurar novos bicicletários.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const data = await res.json();
+      
+      setNewBikeRacksList(data.map(bikerack => {
+        const newBikeRack: BikeRack = {
+          id: bikerack.bike_rack_id,
+          name: bikerack.name,
+          role: bikerack.role ? bikerack.role : null,
+          street: bikerack.street ? bikerack.street : null,
+          number: bikerack.num ? bikerack.num : null,
+          zipCode: bikerack.zip_code ? bikerack.zip_code : null,
+          city: bikerack.city ? bikerack.city : null,
+          state: bikerack.state ? bikerack.state : null,
+        };
+        return newBikeRack;
+      }));
+
+    } catch (err) {
+      toast({
+        title: "Erro ao buscar bicicletários!",
+        description: "Parece que há problemas na conexão com o servidor.",
+        variant: "destructive"
+      });
+      console.error(`Erro ao buscar bicicletários: ${err}`);
+    }
+  }
+
+  const clearFormData = () => {
+    setFormData({
+      name: "",
+      street: "",
+      num: null,
+      city: "",
+      state: "",
+      zipCode: "",
+    })
+  }
+
+  const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (editingBikeRack) {
-      setBikeRacks(prev => prev.map(rack => 
-        rack.id === editingBikeRack.id 
-          ? { ...rack, ...formData }
-          : rack
-      ));
+
+    if(createBikeRack({
+      id: null,
+      name: formData.name,
+      address: {
+          street: formData.street,
+          number: formData.num,
+          zip_code: formData.zipCode,
+          city: formData.city,
+          state: formData.state,
+      }
+    } as BikeRackType)){
       toast({
-        title: "Bicicletário atualizado",
-        description: "As informações foram salvas com sucesso.",
-      });
-    } else {
-      const newBikeRack: BikeRack = {
-        id: Date.now(),
-        ...formData,
-        totalBikes: 0,
-        availableBikes: 0,
-      };
-      setBikeRacks(prev => [...prev, newBikeRack]);
+        title: "Sucesso!",
+        description: `Bicicletário ${formData.name} criado com sucesso!`,
+      })
+      setIsDialogOpen(false);
+      setEditingBikeRack(null);
+      clearFormData();
+
+    }else{
       toast({
-        title: "Bicicletário criado",
-        description: "Novo estabelecimento cadastrado com sucesso.",
-      });
+        title: "Erro!",
+        description: "Problemas ao tentar criar Bicicletário!",
+        variant: "destructive"
+      })
     }
 
     setIsDialogOpen(false);
     setEditingBikeRack(null);
-    setFormData({ name: "", address: "", city: "", state: "", zipCode: "" });
+    clearFormData();
   };
 
   const handleEdit = (bikeRack: BikeRack) => {
     setEditingBikeRack(bikeRack);
     setFormData({
       name: bikeRack.name,
-      address: bikeRack.address,
+      street: bikeRack.street,
+      num: bikeRack.number,
       city: bikeRack.city,
       state: bikeRack.state,
       zipCode: bikeRack.zipCode,
@@ -102,13 +236,54 @@ const BikeRacks = () => {
     setIsDialogOpen(true);
   };
 
+  const handleAdd = async (br_id: number) => {
+    try{
+      const res = await fetch(`http://localhost:4000/user/setRole`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': "application/json",
+          'Authorization': localStorage.getItem('token')
+        },
+        body: JSON.stringify({
+          id_user: user.user_id,
+          id_bikerack: br_id,
+          role: "customer"
+        })
+      });
+
+      const data = await res.json();
+
+      if(!data.ok){
+        toast({
+          title: "Erro ao adicionar bicicletário!",
+          description: "Bicicletário ou usuário inválidos.",
+          variant: "destructive"
+        })
+        return;
+      }
+
+      refetch();    
+      toast({
+        title: "Bicicletário adicionado!",
+        description: "Agora pode acessar esse bicicletário como cliente."
+      });
+      
+    }catch(err){
+      toast({
+        title: "Erro ao tentar adicionar bicicletário!",
+        description: "Parece que há um problema com a conexão com o servidor.",
+        variant: "destructive"
+      })
+    }
+  }
+
   const handleDelete = (id: number) => {
-    setBikeRacks(prev => prev.filter(rack => rack.id !== id));
-    toast({
-      title: "Bicicletário removido",
-      description: "O estabelecimento foi excluído.",
-      variant: "destructive",
-    });
+    // setBikeRacks(prev => prev.filter(rack => rack.id !== id));
+    // toast({
+    //   title: "Bicicletário removido",
+    //   description: "O estabelecimento foi excluído.",
+    //   variant: "destructive",
+    // });
   };
 
   const getAvailabilityBadge = (available: number, total: number) => {
@@ -118,171 +293,229 @@ const BikeRacks = () => {
     return <Badge className="bg-destructive text-destructive-foreground">Baixa</Badge>;
   };
 
+  if (authLoading || bikeRackLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div>Carregando ({authLoading ? "Autenticação" : "Bicicletários"})...</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!user) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div>Usuário não autenticado</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold gradient-text">Bicicletários</h1>
-            <p className="text-muted-foreground">Gerencie os estabelecimentos cadastrados</p>
-          </div>
-          
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="bg-primary hover:bg-primary/90"
+      <Label className="text-3xl font-bold tracking-tight">
+        Bicicletários
+      </Label>
+      <p className="text-muted-foreground">
+        Gerenciamento de bicicletários relacionados
+      </p>
+      <div className="mt-4">
+        <div className="mt-6 mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <QuickAction
+            title="Buscar Biciletários"
+            description="Adicione um bicicletário para alugar bicicletas online!"
+            icon={List}
+            btnText="Buscar"
+            onClick={() => {
+              fetchNewBikeRacks();
+              setIsListOpen(true);
+            }} // adicionar abertura do modal de listagem/seleção
+          />
+          <QuickAction
+            title="Crie seu Biciletário"
+            description="Você pode criar e gerenciar seu próprio bicicletário!"
+            icon={SquarePlus}
+            btnText="Criar"
+            onClick={() => {
+              setEditingBikeRack(null);
+              clearFormData();
+              setIsDialogOpen(true);
+            }}
+          />
+        </div>
+
+        {
+          userBikeRacks.length != 0 &&
+          <Label className="text-2xl">
+            Visualizar bicicletário:
+          </Label>
+        }
+        <div className="mt-6 mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {
+            userBikeRacks?.map((bikerack, index) => {
+              let address = bikerack.address
+              let addrStr = address ?
+                `${address.street}, ${address.number} - ${address.zip_code}, ${address.city} - ${address.state}`
+                : ""
+              return (
+                <QuickAction
+                  key={bikerack.id}
+                  title={bikerack.name}
+                  description={addrStr}
+                  icon={Bike}
+                  onClick={() => {
+                    selectBikeRack(index);
+                    nav('/dashboard')
+                  }}
+                  // adicionar bikerack.role, quando for fornecida pelo back (atualizar context também)
+                />
+              )
+            })
+          }
+        </div>
+      </div>
+
+      {/* Caixa de Criação */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              Novo Bicicletário
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="name">Nome do Estabelecimento</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Ex: Bicicletário A"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-4 gap-4">
+                <div className="col-span-3">
+                  <Label htmlFor="address">Endereço</Label>
+                  <Input
+                    id="address"
+                    value={formData.street}
+                    onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                    placeholder="Ex: Rua das Flores, 123"
+                    required
+                  />
+                </div>
+                <div className="col-span-1">
+                  <Label htmlFor="number">Número</Label>
+                  <Input
+                    id="number"
+                    value={formData.num ? `${formData.num}`:""}
+                    onChange={(e) => setFormData({ ...formData, num: Number(e.target.value) })}
+                    placeholder="Ex: 10"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="zipCode">CEP</Label>
+                <Input
+                  id="zipCode"
+                  value={formData.zipCode}
+                  onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                  placeholder="01001-000"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="city">Cidade</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    placeholder="São Paulo"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">Estado</Label>
+                  <Input
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    placeholder="SP"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="destructive"
                 onClick={() => {
-                  setEditingBikeRack(null);
-                  setFormData({ name: "", address: "", city: "", state: "", zipCode: "" });
+                  clearFormData();
+                  setIsDialogOpen(false);
                 }}
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Bicicletário
+                Cancelar
               </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingBikeRack ? "Editar Bicicletário" : "Novo Bicicletário"}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid gap-4">
-                  <div>
-                    <Label htmlFor="name">Nome do Estabelecimento</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      placeholder="Ex: Centro - Praça da Sé"
-                      required
+              <Button 
+                type="submit" 
+                className="bg-primary/70 hover:bg-primary"
+              >
+                Criar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Caixa de Lista de Bicicletários */}
+      <Dialog open={isListOpen} onOpenChange={setIsListOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              Seja cliente de outros bicicletários!
+            </DialogTitle>
+          </DialogHeader>
+
+          {
+            newBikeRacksList.length === 0 ?
+            <div className="h-[200px] w-full flex items-center justify-center">
+              <h1>Ops... Parece que não há outros biciclerários!</h1>
+            </div>
+            :
+            <ScrollArea className="h-[400px] w-full">
+              {
+                newBikeRacksList.map(newBikeRack => {
+                  let address = newBikeRack.street ?
+                    `${newBikeRack.street}, ${newBikeRack.number} - ${newBikeRack.zipCode}, ${newBikeRack.city} - ${newBikeRack.state}`
+                    : ""
+                  return (
+                    <OptionCard
+                      title={newBikeRack.name}
+                      description={address}
+                      onCLickFunction={() => {
+                        handleAdd(newBikeRack.id)
+                      }}
                     />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="address">Endereço</Label>
-                    <Input
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({...formData, address: e.target.value})}
-                      placeholder="Ex: Rua das Flores, 123"
-                      required
-                    />
-                  </div>
+                  )
+                })
+              }
+            </ScrollArea>
+          }
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">Cidade</Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => setFormData({...formData, city: e.target.value})}
-                        placeholder="São Paulo"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="state">Estado</Label>
-                      <Input
-                        id="state"
-                        value={formData.state}
-                        onChange={(e) => setFormData({...formData, state: e.target.value})}
-                        placeholder="SP"
-                        required
-                      />
-                    </div>
-                  </div>
+        </DialogContent>
+      </Dialog>
 
-                  <div>
-                    <Label htmlFor="zipCode">CEP</Label>
-                    <Input
-                      id="zipCode"
-                      value={formData.zipCode}
-                      onChange={(e) => setFormData({...formData, zipCode: e.target.value})}
-                      placeholder="01001-000"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button type="submit" className="bg-primary hover:bg-primary/90">
-                    {editingBikeRack ? "Salvar" : "Criar"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {bikeRacks.map((rack) => (
-            <Card key={rack.id} className="border-border/50 hover:border-primary/50 transition-all">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Building2 className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">{rack.name}</CardTitle>
-                  </div>
-                  {getAvailabilityBadge(rack.availableBikes, rack.totalBikes)}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <MapPin className="mr-2 h-4 w-4" />
-                  <span>{rack.address}, {rack.city} - {rack.state}</span>
-                </div>
-                
-                <div className="flex justify-between text-sm">
-                  <span>Bicicletas Disponíveis:</span>
-                  <span className="font-medium text-primary">
-                    {rack.availableBikes}/{rack.totalBikes}
-                  </span>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(rack)}
-                    className="flex-1"
-                  >
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Editar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(rack.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {bikeRacks.length === 0 && (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Building2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Nenhum bicicletário cadastrado</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Clique em "Novo Bicicletário" para começar
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
     </DashboardLayout>
   );
 };

@@ -111,6 +111,25 @@ export class UserService {
         }
     }
 
+    async listBikeracks(id_user: number){
+        return await this.database.query(
+            `
+                WITH ids_bikeracks AS (
+                    SELECT bike_rack_id 
+                    FROM UsersRole
+                    WHERE user_id = $1
+                )
+                SELECT br.*, a.*
+                FROM BikeRack br
+                INNER JOIN Address a 
+                    ON br.address_id = a.address_id
+                RIGHT JOIN ids_bikeracks ibr            
+                    ON br.bike_rack_id = ibr.bike_rack_id;
+            `, // mudei de LEFT JOIN para RIGHT JOIN acima. @Herickjf
+            [id_user]
+        );
+    }
+
     async search(filter: {[key: string]: any}){
         if(filter == null || filter == undefined) return [];
 
@@ -130,6 +149,38 @@ export class UserService {
             );
         }catch(e){
             throw new BadGatewayException('Erro ao tentar buscar User(s)!', e.message);
+        }
+    }
+
+    async role(bike_rack_id: number, user_id: number){
+        var query =
+        `
+        SELECT ur.role
+        FROM UsersRole ur
+        WHERE ur.bike_rack_id = $1 AND ur.user_id = $2
+        `;
+
+        try{
+            const ret = await this.database.query(query, [bike_rack_id, user_id]);
+            return ret[0];
+        }catch(e){
+            throw new BadGatewayException('Erro ao tentar procurar Role do usuário!');
+        }
+    }
+
+    async listBikeracksWhereIsOwner(id_user: number){
+        try{
+            return await this.database.query(
+                `
+                SELECT b.*, a.*
+                FROM BikeRack b
+                JOIN Address a ON a.address_id = b.address_id
+                LEFT JOIN UsersRole ur ON ur.user_id = $1;
+                `,
+                [id_user]
+            )
+        }catch(e){
+            throw new BadRequestException("Erro ao procurar bicicletarios " + e.message)
         }
     }
 

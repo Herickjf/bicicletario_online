@@ -9,11 +9,17 @@ import {
   TrendingUp,
   Clock,
   MapPin,
-  Package
+  Package,
+  SquarePlus,
+  List,
+  MousePointer2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
+import { Label } from "@/components/ui/label"
+import { add } from "date-fns"
+import { useBikeRacks } from "@/contexts/bikerack-context"
 
 const StatCard = ({ title, value, description, icon: Icon, trend }: {
   title: string
@@ -56,15 +62,27 @@ const OptionCard = ({ title, description, href }: { title: string; description: 
 interface BikeRack {
   id: number;
   name: string;
+  address: {
+    street: string,
+    number: string,
+    zip_code: string,
+    city: string,
+    state: string
+  }
 }
 
-const QuickAction = ({ title, description, icon: Icon, href }: {
+export const QuickAction = ({ title, description, icon: Icon, href, onClick, btnText}: {
   title: string
   description: string
   icon: any
-  href: string
+  href?: string
+  onClick?: () => void
+  btnText?: string
 }) => (
-  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+  <Card 
+    className="hover:shadow-md transition-shadow cursor-pointer"
+    onClick={onClick}
+  >
     <CardHeader>
       <div className="flex items-center space-x-2">
         <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -76,7 +94,7 @@ const QuickAction = ({ title, description, icon: Icon, href }: {
     </CardHeader>
     <CardContent>
       <Button variant="outline" size="sm" asChild>
-        <Link to={href}>Acessar</Link>
+        <Link to={href}>{btnText? btnText :"Acessar"}</Link>
       </Button>
     </CardContent>
   </Card>
@@ -100,23 +118,22 @@ interface clientes {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth()
+  const nav = useNavigate()
+  const {currentBikeRack} = useBikeRacks();
+  const { user, userRole,authLoading } = useAuth()
 
   const [ bicicletasInfo, setBicicletasInfo ] = useState<bicicletas | null>(null);  
   const [ alugueisInfo, setAlugueisInfo ] = useState<alugueis | null>(null);
   const [ receitaInfo, setReceitaInfo ] = useState<receita | null>(null);
   const [ clientesInfo, setClientesInfo ] = useState<clientes | null>(null);
-  const [ bikeRacks, setBikeRacks ] = useState<BikeRack[]>([]);
-
-  if (!user) return null
-
+  
   useEffect(() => {
-    // fetch PREN-AQUI
-
+    if (!user || !user.bike_rack_id) return;
+    
     fetch(`http://localhost:4000/bikerack/mainScreenInfo/${user.bike_rack_id}`)
       .then(res => res.json())
       .then(data => {
-        console.log(data)
+        // console.log(data)
         setBicicletasInfo({num_bicicletas: data.num_bicicletas});
         setAlugueisInfo({num_alugueis: data.num_alugueis});
         setReceitaInfo({receita_mensal: data.receita_mensal, percent_aumento: data.percent_aumento});
@@ -124,19 +141,31 @@ export default function Dashboard() {
       })
       .catch(err => console.error('Erro ao buscar informações das bicicletas:', err));
       // ISSUE #1: Trocar console.error por notificação
-
-      fetch(`http://localhost:4000/bikerack/userBikeRacks/${user.user_id}`)
-      .then(res => res.json())
-      .then(data => {
-        setBikeRacks(data);
-      })
-      .catch(err => console.error('Erro ao buscar informações dos bicicletários:', err));
-
   }, [])
+
+  // console.log("currentBikerack: ", currentBikeRack)
+  if (authLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div>Carregando autenticação...</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!user) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div>Usuário não autenticado</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const renderOwnerDashboard = () => (
     <>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Bicicletas Cadastradas"
@@ -374,63 +403,85 @@ export default function Dashboard() {
     </>
   )
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Bem-vindo, {user.name}!
-          </h1>
-          <p className="text-muted-foreground">
-            {user.role === 'owner' && 'Visão geral do seu bicicletário'}
-            {user.role === 'manager' && 'Painel de gerenciamento'}
-            {user.role === 'attendant' && 'Painel de vendas'}
-            {user.role === 'customer' && 'Suas atividades e opções'}
-          </p>
+  if(!currentBikeRack){
+    return(
+      <DashboardLayout>
+        <div className="min-h-full flex flex-col items-center justify-center gap-4 p-10">
+          <Label className="text-2xl text-center">Você precisa se conectar a um bicicletário para ter acesso ao DashBoard!</Label>
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => nav('/bikeracks')}
+            className="flex items-center"
+          >
+            <MousePointer2
+              className="mr-2 h-4 w-4"
+            />
+            Ver Bicicletários
+          </Button>
         </div>
+      </DashboardLayout>
+  )}
 
-        {!user.bike_rack_id ? (
-          <>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-              <OptionCard
-                title="Participar de um BikeRack"
-                description="Escolha um bicicletário existente para se juntar e começar a alugar bicicletas."
-                href="/join-rack"
-              />
-              <OptionCard
-                title="Criar um BikeRack"
-                description="Crie seu próprio bicicletário e gerencie bicicletas, aluguéis e clientes."
-                href="/create-rack"
-              />
-            </div>
+  return (
+    <>
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Bem-vindo(a), {user.name}!
+            </h1>
+            <p className="text-muted-foreground">
+              {userRole === 'owner' && 'Visão geral do seu bicicletário'}
+              {userRole === 'manager' && 'Painel de gerenciamento'}
+              {userRole === 'attendant' && 'Painel de vendas'}
+              {userRole === 'customer' && 'Suas atividades e opções'}
+            </p>
+          </div>
 
-            {bikeRacks.length > 0 && (
-              <div className="mt-6">
-                <h2 className="text-2xl font-semibold mb-2">Bicicletários que você participa</h2>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {bikeRacks.map(rack => (
-                    <Card key={rack.id}>
-                      <CardHeader>
-                        <CardTitle>{rack.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <Button variant="outline" onClick={() => user.bike_rack_id=rack.id} asChild>
-                          Acessar Bicicletário
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+          {/* {!user.bike_rack_id ? (
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+                <OptionCard
+                  title="Participar de um BikeRack"
+                  description="Escolha um bicicletário existente para se juntar e começar a alugar bicicletas."
+                  href="/join-rack"
+                />
+                <OptionCard
+                  title="Criar um BikeRack"
+                  description="Crie seu próprio bicicletário e gerencie bicicletas, aluguéis e clientes."
+                  href="/create-rack"
+                />
               </div>
-            )}
-          </>
-        ) : null}
 
-        {user.role === 'owner' && renderOwnerDashboard()}
-        {user.role === 'manager' && renderManagerDashboard()}
-        {user.role === 'attendant' && renderAttendantDashboard()}
-        {user.role === 'customer' && renderCustomerDashboard()}
-      </div>
-    </DashboardLayout>
+              {bikeRacks.length > 0 && (
+                <div className="mt-6">
+                  <h2 className="text-2xl font-semibold mb-2">Bicicletários que você participa</h2>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {bikeRacks.map(rack => (
+                      <Card key={rack.id}>
+                        <CardHeader>
+                          <CardTitle>{rack.name}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <Button variant="outline" onClick={() => user.bike_rack_id=rack.id} asChild>
+                            Acessar Bicicletário
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : null} */}
+
+          {userRole === 'owner' && renderOwnerDashboard()}
+          {userRole === 'manager' && renderManagerDashboard()}
+          {userRole === 'attendant' && renderAttendantDashboard()}
+          {userRole === 'customer' && renderCustomerDashboard()}
+        </div>
+      </DashboardLayout>
+    </>
   )
 }

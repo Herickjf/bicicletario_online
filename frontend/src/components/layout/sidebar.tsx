@@ -5,20 +5,24 @@ import { useAuth } from "@/contexts/auth-context";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Bike, Building2, Calendar, CreditCard, Home, LogOut, Settings, Users, BarChart3, MapPin, Package } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 const getMenuItems = (role: string) => {
-  const baseItems = [{
-    icon: Home,
-    label: "Dashboard",
-    href: "/dashboard"
-  }];
+  const baseItems = [
+    {
+      icon: Home,
+      label: "Dashboard",
+      href: "/dashboard"
+    },
+    {
+      icon: Building2,
+      label: "Bicicletários",
+      href: "/bikeracks"
+    }
+  ];
   switch (role) {
     case 'owner':
       return [...baseItems, {
-        icon: Building2,
-        label: "Bicicletários",
-        href: "/bike-racks"
-      }, {
         icon: Bike,
         label: "Bicicletas",
         href: "/bikes"
@@ -81,10 +85,6 @@ const getMenuItems = (role: string) => {
       }];
     case 'customer':
       return [...baseItems, {
-        icon: MapPin,
-        label: "Bicicletários",
-        href: "/browse-racks"
-      }, {
         icon: Calendar,
         label: "Meus Aluguéis",
         href: "/my-rentals"
@@ -102,11 +102,19 @@ export function Sidebar({
 }: SidebarProps) {
   const {
     user,
+    userRole,
     logout
   } = useAuth();
+  const [menuItems, setMenuItems] = useState([]);
+  
   const location = useLocation();
+  
   if (!user) return null;
-  const menuItems = getMenuItems(user.role);
+
+  useEffect(() => {
+    setMenuItems(getMenuItems(userRole));
+  }, [userRole]);
+
   return <div className={cn("pb-12 w-64", className)}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
@@ -149,10 +157,10 @@ export function Sidebar({
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium leading-none">{user.name}</p>
               <p className="text-xs leading-none text-muted-foreground">
-                {user.role === 'owner' && 'Proprietário'}
-                {user.role === 'manager' && 'Gerente'}
-                {user.role === 'attendant' && 'Vendedor'}
-                {user.role === 'customer' && 'Cliente'}
+                {userRole === 'owner' && 'Proprietário'}
+                {userRole === 'manager' && 'Gerente'}
+                {userRole === 'attendant' && 'Vendedor'}
+                {userRole === 'customer' && 'Cliente'}
               </p>
             </div>
           </div>

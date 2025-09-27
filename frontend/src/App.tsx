@@ -15,14 +15,15 @@ import Plans from "./pages/Plans";
 import NotFound from "./pages/NotFound";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Providers from "./contexts/providers";
 // import Cadastrar from "./pages/Cadastrar";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, authLoading } = useAuth();
   
-  if (isLoading) {
+  if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
   }
   
@@ -36,7 +37,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <AuthProvider>
+      <Providers>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -89,7 +90,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </AuthProvider>
+      </Providers>
     </ThemeProvider>
   </QueryClientProvider>
 );
