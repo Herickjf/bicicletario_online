@@ -86,13 +86,22 @@ export class UserController {
         return await this.service.role(bike_rack_id, user_id);
     }
 
-    @Get('listBikeracks/:id_user')
+    @Get('listBikeracks/:user_id')
     @ApiOperation({
         summary: 'Listagem de Bicicletarios de um Usuario',
         description: 'Lista todos os bicicletarios que um usuario participa'
     })
-    async listBikeracks(@Param('id_user') id_user: number){
-        return await this.service.listBikeracks(id_user);
+    async listBikeracks(@Param('user_id') user_id: number){
+        return await this.service.listBikeracks(user_id);
+    }
+
+    @Get("notRelatedBikerack/:user_id")
+    @ApiOperation({
+        summary: 'Listagem de Bicicletarios aos quais nao pertence',
+        description: 'Lista todos os bicicletarios aos quais o usuário não possui nenhuma relação'
+    })
+    async notRelatedBikeracks(@Param('user_id') user_id: number){
+        return await this.service.notRelatedBikeracks(user_id);
     }
 
     @Get('listBikeracksWhereIsOwner/:id_user')

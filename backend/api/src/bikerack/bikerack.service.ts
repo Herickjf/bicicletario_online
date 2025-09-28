@@ -16,7 +16,7 @@ export class BikerackService {
                 `
                 INSERT INTO Address (street, num, zip_code, city, state)
                 VALUES ($1, $2, $3, $4, $5)
-                RETURNING address_id;
+                RETURNING *;
                 `, bikerack.address);
         }catch(e){
             throw {'error': e, 'message': 'Erro ao tentar cadastrar endereço'};
@@ -25,7 +25,7 @@ export class BikerackService {
         address_id = ret ? ret[0]['address_id'] : null
 
         try{
-            return await this.database.query(
+            return { bikerack: await this.database.query(
                 `
                 INSERT INTO BikeRack (name, image, address_id)
                 VALUES ($1, $2, $3)
@@ -35,9 +35,11 @@ export class BikerackService {
                     bikerack.image, 
                     address_id
                 ]
-            );
+            ),
+            address: ret
+            }
         }catch(e){
-            throw {'error': e, 'message': 'Erro ao tentar cadastrar Bicicletário!'};
+            throw new BadRequestException(e.message)
         }
     }
 

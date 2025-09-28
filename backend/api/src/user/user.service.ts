@@ -115,19 +115,39 @@ export class UserService {
         return await this.database.query(
             `
                 WITH ids_bikeracks AS (
-                    SELECT bike_rack_id 
+                    SELECT bike_rack_id, role 
                     FROM UsersRole
                     WHERE user_id = $1
                 )
-                SELECT br.*, a.*
+                SELECT br.*, a.*, ibr.role
                 FROM BikeRack br
                 INNER JOIN Address a 
                     ON br.address_id = a.address_id
-                RIGHT JOIN ids_bikeracks ibr            
+                INNER JOIN ids_bikeracks ibr            
                     ON br.bike_rack_id = ibr.bike_rack_id;
             `, // mudei de LEFT JOIN para RIGHT JOIN acima. @Herickjf
             [id_user]
         );
+    }
+
+    async notRelatedBikeracks(user_id: number){
+        try{
+            return await this.database.query(
+                `
+                    SELECT br.*
+                    FROM BikeRack br
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM UsersRole ur
+                        WHERE ur.bike_rack_id = br.bike_rack_id
+                        AND ur.user_id = $1
+                    );
+                `,
+                [user_id]
+            )
+        }catch(e){
+            throw new BadRequestException(e.message);
+        }
     }
 
     async search(filter: {[key: string]: any}){
