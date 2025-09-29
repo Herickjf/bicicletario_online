@@ -12,6 +12,7 @@ export interface BikeRackType {
         city: string
         state: string
     } | null;
+    role: UserRole;
 };
 
 interface BikeracksContextType {
@@ -60,6 +61,7 @@ export function BikeRackProvider({children} : {children: React.ReactNode}) {
                         city: bikerack.city,
                         state: bikerack.state
                     } : null,
+                    role: bikerack.role
                 }
             }))
         })
@@ -134,16 +136,19 @@ export function BikeRackProvider({children} : {children: React.ReactNode}) {
             }
             const data = await res.json()
 
+            console.log(data)
+
             // vincular esse bikerack criado ao usuário que solicitou:
             try {
-                fetch(`http://localhost:4000/user/setRole`, {
+                fetch(`http://localhost:4000/user/createRole`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
                     },
                     body: JSON.stringify({
                         id_user: user.user_id,
-                        id_bikerack: data[0]["bike_rack_id"],
+                        id_bikerack: data["bike_rack_id"],
                         role: "owner"
                     })
                 })
@@ -153,20 +158,19 @@ export function BikeRackProvider({children} : {children: React.ReactNode}) {
                 }
 
             }catch(err){
-                // console.log(err)
+                console.log(err)
                 console.log("Erro na atribuição de função do usuário no bicicletário:");
                 setBikeRackLoading(false);
                 return false;
 
-            }finally{
-
             }
+
             // atualiza lista de bikeracks desse usuário
             refetch();
             changeUserRole('owner');
 
             for(const br of userBikeRacks){
-                if(br.id === data[0]["bike_rack_id"]){
+                if(br.id === data["bike_rack_id"]){
                     setCurrentBikeRack(br);
                     break;
                 }

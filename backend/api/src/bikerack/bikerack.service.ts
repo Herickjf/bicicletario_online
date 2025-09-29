@@ -25,7 +25,7 @@ export class BikerackService {
         address_id = ret ? ret[0]['address_id'] : null
 
         try{
-            return { bikerack: await this.database.query(
+            const br = await this.database.query(
                 `
                 INSERT INTO BikeRack (name, image, address_id)
                 VALUES ($1, $2, $3)
@@ -35,8 +35,15 @@ export class BikerackService {
                     bikerack.image, 
                     address_id
                 ]
-            ),
-            address: ret
+            )
+            return {
+                bike_rack_id: br[0].bike_rack_id,
+                name: br[0].name,
+                street: ret[0].street,
+                num: ret[0].num,
+                zip_code: ret[0].zip_code,
+                city: ret[0].city,
+                state: ret[0].state,
             }
         }catch(e){
             throw new BadRequestException(e.message)
@@ -268,11 +275,66 @@ export class BikerackService {
                 `
                 UPDATE BikeRack
                 SET ${columns.map((col, idx) => `${col} = $${idx + 1}`).join(', ')}
-                WHERE bikerack_id = $${columns.length + 1}
+                WHERE bike_rack_id = $${columns.length + 1}
                 `, [...values, id]
             );
         } catch (e) {
             throw new BadGatewayException('Erro ao tentar atualizar Bicicletário!', e.message);
+        }
+    }
+
+    async updateFull(bikerack: {
+        id: number,
+        name: string,
+        street: string,
+        num: number,
+        zip_code: string,
+        city: string,
+        state: string
+    }){
+        const query1 = `
+            UPDATE BikeRack
+            SET name = $1
+            WHERE bike_rack_id = $2
+            RETURNING *        
+        `;
+        const query2 = `
+            UPDATE Address
+            SET 
+                street = $1,
+                num = $2,
+                zip_code = $3,
+                city = $4,
+                state = $5
+            WHERE address_id = $6
+            RETURNING *
+        `;
+
+        try{
+
+            const br_ret = this.database.query(query1, [bikerack.name, bikerack.id])[0];
+            const addr_ret = this.database.query(query2, [
+                bikerack.street,
+                bikerack.num,
+                bikerack.zip_code,
+                bikerack.city,
+                bikerack.state,
+                br_ret.address_id
+            ])[0];
+
+            const ret = {
+                bike_rack_id: br_ret.bike_rack_id,
+                name: br_ret.name,
+                street: addr_ret.street,
+                num: addr_ret.num,
+                zip_code: addr_ret.zip_code,
+                city: addr_ret.city,
+                state: addr_ret.state,
+            }
+
+            return ret;
+        }catch(e){
+            throw new BadGatewayException("Erro ao tentar atualizar o bicicletário por completo: ", e.message);
         }
     }
 

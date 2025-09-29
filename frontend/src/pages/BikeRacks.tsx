@@ -30,8 +30,8 @@ interface BikeRack {
 
 const roleColors = {
   customer: "bg-primary text-primary-foreground",
-  owner: "bg-success text-success-foreground",
-  manager: "bg-secondary text-secondary-foreground",
+  owner: "bg-warning text-warning-foreground",
+  manager: "bg-success text-success-foreground",
   attendant: "bg-destructive text-destructive-foreground",
 }
 
@@ -49,7 +49,7 @@ const roleIcons = {
   attendant: Package,
 }
 
-export const QuickAction = ({ title, description, icon: Icon, href, onClick, btnText, role}: {
+export const QuickAction = ({ title, description, icon: Icon, href, onClick, btnText, role, deleteFunc, editFunc}: {
   title: string
   description: string
   icon: any
@@ -57,16 +57,17 @@ export const QuickAction = ({ title, description, icon: Icon, href, onClick, btn
   onClick?: () => void
   btnText?: string
   role?: UserRole
+  deleteFunc?: () => void
+  editFunc?: () => void
 }) => {
   const RoleIcon = role ? roleIcons[role] : null;
-
   return (
     <Card 
-      className="hover:shadow-md transition-shadow cursor-pointer"
-      onClick={onClick}
+      className="hover:shadow-md transition-shadow"
+      // onClick={onClick}
     >
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           <div className="flex flex-col items-left gap-3">
             <div className="flex items-center space-x-2">
               <div className="h-10 w-10 rounded-sm bg-primary/10 flex items-center justify-center">
@@ -85,25 +86,54 @@ export const QuickAction = ({ title, description, icon: Icon, href, onClick, btn
         </div>
       </CardHeader>
       <CardContent>
-        <Button variant="outline" size="sm" asChild>
-          <Link to={href}>{btnText? btnText :"Acessar"}</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onClick}>
+            {btnText? btnText :"Acessar"}
+          </Button>
+          {
+            role &&
+            <Button variant="destructive" size="sm" onClick={deleteFunc}>
+              <Trash2/>
+            </Button>
+          }
+          {
+            role === "owner" &&
+            <Button variant="outline" className="bg-primary/70 hover:bg-primary" size="sm" onClick={editFunc}>
+              <Pencil/>
+            </Button>
+          }
+        </div>
       </CardContent>
     </Card>
   )
 }
 
-const OptionCard = ({ title, description, onCLickFunction }: { title: string; description: string; onCLickFunction: () => void }) => (
-  <Card className="hover:shadow-md transition-shadow">
-    <CardHeader>
-      <CardTitle className="text-lg">{title}</CardTitle>
-      <CardDescription>{description}</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <Button variant="outline" asChild onClick={() => onCLickFunction}>
-        Adicionar
-      </Button>
-    </CardContent>
+const OptionCard = ({ 
+  title, 
+  description, 
+  onClickFunction, 
+  className 
+}: { 
+  title: string; 
+  description: string; 
+  onClickFunction: () => void;
+  className?: string;
+}) => (
+  <Card className={`hover:shadow-md transition-shadow p-4 ${className}`}>
+    <div className="flex items-center justify-between">
+      {/* Conteúdo à esquerda - Nome e Endereço */}
+      <div className="flex-1">
+        <h3 className="font-semibold text-lg mb-1">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+      
+      {/* Botão à direita */}
+      <div className="ml-4">
+        <Button variant="outline" onClick={onClickFunction}>
+          Adicionar
+        </Button>
+      </div>
+    </div>
   </Card>
 );
 
@@ -123,7 +153,8 @@ const BikeRacks = () => {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isListOpen, setIsListOpen] = useState(false);
-  const [editingBikeRack, setEditingBikeRack] = useState<BikeRack | null>(null);
+  const [editingBikeRack, setEditingBikeRack] = useState<BikeRackType | null>(null);
+  const [isEditingBikeRack, setIsEditingBikeRack] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     street: "",
@@ -166,7 +197,6 @@ const BikeRacks = () => {
         };
         return newBikeRack;
       }));
-
     } catch (err) {
       toast({
         title: "Erro ao buscar bicicletários!",
@@ -223,37 +253,38 @@ const BikeRacks = () => {
     clearFormData();
   };
 
-  const handleEdit = (bikeRack: BikeRack) => {
+  const habiliteEdit = (bikeRack: BikeRackType) => {
+    setIsEditingBikeRack(true);
     setEditingBikeRack(bikeRack);
     setFormData({
       name: bikeRack.name,
-      street: bikeRack.street,
-      num: bikeRack.number,
-      city: bikeRack.city,
-      state: bikeRack.state,
-      zipCode: bikeRack.zipCode,
+      street: bikeRack.address.street,
+      num: bikeRack.address.number,
+      city: bikeRack.address.city,
+      state: bikeRack.address.state,
+      zipCode: bikeRack.address.zip_code,
     });
     setIsDialogOpen(true);
   };
 
   const handleAdd = async (br_id: number) => {
+    const body = {
+      id_user: user.user_id,
+      id_bikerack: br_id,
+      role: "customer"
+    }
+
     try{
-      const res = await fetch(`http://localhost:4000/user/setRole`, {
+      const res = await fetch(`http://localhost:4000/user/createRole`, {
         method: 'POST',
         headers: {
           'Content-Type': "application/json",
-          'Authorization': localStorage.getItem('token')
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         },
-        body: JSON.stringify({
-          id_user: user.user_id,
-          id_bikerack: br_id,
-          role: "customer"
-        })
+        body: JSON.stringify(body)
       });
-
-      const data = await res.json();
-
-      if(!data.ok){
+      
+      if(!res.ok){
         toast({
           title: "Erro ao adicionar bicicletário!",
           description: "Bicicletário ou usuário inválidos.",
@@ -267,7 +298,7 @@ const BikeRacks = () => {
         title: "Bicicletário adicionado!",
         description: "Agora pode acessar esse bicicletário como cliente."
       });
-      
+      setIsListOpen(false);
     }catch(err){
       toast({
         title: "Erro ao tentar adicionar bicicletário!",
@@ -277,20 +308,96 @@ const BikeRacks = () => {
     }
   }
 
-  const handleDelete = (id: number) => {
-    // setBikeRacks(prev => prev.filter(rack => rack.id !== id));
-    // toast({
-    //   title: "Bicicletário removido",
-    //   description: "O estabelecimento foi excluído.",
-    //   variant: "destructive",
-    // });
-  };
+  const handleEdit = async () => {
+    try{
+      const res = await fetch(`http://localhost:4000/bikerack/updateFull`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': "application/json",
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({
+          id: editingBikeRack.id,
+          name: editingBikeRack.name,
+          street: editingBikeRack.address.street,
+          num: editingBikeRack.address.number,
+          zip_code: editingBikeRack.address.zip_code,
+          city: editingBikeRack.address.city,
+          state: editingBikeRack.address.state,
+        })
+      });
 
-  const getAvailabilityBadge = (available: number, total: number) => {
-    const percentage = total > 0 ? (available / total) * 100 : 0;
-    if (percentage >= 70) return <Badge className="bg-success text-success-foreground">Alta</Badge>;
-    if (percentage >= 30) return <Badge className="bg-warning text-warning-foreground">Média</Badge>;
-    return <Badge className="bg-destructive text-destructive-foreground">Baixa</Badge>;
+      console.log(res)
+
+      if(!res.ok){
+        toast({
+          title: "Erro ao atualizar bicicletário!",
+          description: "Bicicletário inválido.",
+          variant: "destructive"
+        })
+        return;
+      }
+      
+      toast({
+        title: "Bicicletário atualizado!",
+        description: "Este bicicletário foi atualizado com sucesso."
+      });
+      refetch();    
+    }catch(err){
+      toast({
+        title: "Erro ao tentar atualizar bicicletário!",
+        description: "Parece que há um problema com a conexão com o servidor.",
+        variant: "destructive"
+      })
+    }finally{
+      setIsDialogOpen(false);
+    }
+  }
+
+  const handleDelete = async (bike_rack_id: number, role: UserRole) => {
+
+    try{
+      const res = role === 'owner' ? 
+      await fetch(`http://localhost:4000/bikerack/delete/${bike_rack_id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        }
+      })
+      :
+      await fetch(`http://localhost:4000/user/deleteRole`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({
+          id_user: user.user_id,
+          id_bikerack: bike_rack_id,
+        })
+      })
+
+      if(!res.ok){ 
+        toast({
+          title: "Erro ao deletar bicicletário!",
+          description: "O bicicletário não foi excluído.",
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      refetch();    
+      toast({
+        title: "Bicicletário excluído!",
+        description: "Exclusão do bicicletário concluída com sucesso."
+      });
+    }catch(err){
+      toast({
+        title: "Erro ao tentar excluir bicicletário!",
+        description: "Parece que há um problema com a conexão com o servidor.",
+        variant: "destructive"
+      })
+    }
   };
 
   if (authLoading || bikeRackLoading) {
@@ -322,7 +429,7 @@ const BikeRacks = () => {
         Gerenciamento de bicicletários relacionados
       </p>
       <div className="mt-4">
-        <div className="mt-6 mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-2">
           <QuickAction
             title="Buscar Biciletários"
             description="Adicione um bicicletário para alugar bicicletas online!"
@@ -340,6 +447,7 @@ const BikeRacks = () => {
             btnText="Criar"
             onClick={() => {
               setEditingBikeRack(null);
+              setIsEditingBikeRack(false);
               clearFormData();
               setIsDialogOpen(true);
             }}
@@ -369,7 +477,9 @@ const BikeRacks = () => {
                     selectBikeRack(index);
                     nav('/dashboard')
                   }}
-                  // adicionar bikerack.role, quando for fornecida pelo back (atualizar context também)
+                  role={bikerack.role}
+                  deleteFunc={() => handleDelete(bikerack.id, bikerack.role)}
+                  editFunc={() => habiliteEdit(bikerack)}
                 />
               )
             })
@@ -382,10 +492,10 @@ const BikeRacks = () => {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              Novo Bicicletário
+              {isEditingBikeRack ? "Editar Bicicletário" : "Novo Bicicletário"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCreate} className="space-y-4">
+          <form onSubmit={isEditingBikeRack ? handleEdit : handleCreate} className="space-y-4">
             <div className="grid gap-4">
               <div>
                 <Label htmlFor="name">Nome do Estabelecimento</Label>
@@ -461,6 +571,8 @@ const BikeRacks = () => {
                 type="button"
                 variant="destructive"
                 onClick={() => {
+                  setIsEditingBikeRack(false);
+                  setEditingBikeRack(null);
                   clearFormData();
                   setIsDialogOpen(false);
                 }}
@@ -471,7 +583,7 @@ const BikeRacks = () => {
                 type="submit" 
                 className="bg-primary/70 hover:bg-primary"
               >
-                Criar
+                {isEditingBikeRack ? "Atualizar" : "Criar"}
               </Button>
             </div>
           </form>
@@ -480,39 +592,34 @@ const BikeRacks = () => {
 
       {/* Caixa de Lista de Bicicletários */}
       <Dialog open={isListOpen} onOpenChange={setIsListOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] h-[500px] flex flex-col">
           <DialogHeader>
-            <DialogTitle>
-              Seja cliente de outros bicicletários!
-            </DialogTitle>
+            <DialogTitle>Seja cliente de outros bicicletários!</DialogTitle>
           </DialogHeader>
 
-          {
-            newBikeRacksList.length === 0 ?
-            <div className="h-[200px] w-full flex items-center justify-center">
-              <h1>Ops... Parece que não há outros biciclerários!</h1>
+          {newBikeRacksList.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <h1>Ops... Parece que não há outros bicicletários!</h1>
             </div>
-            :
-            <ScrollArea className="h-[400px] w-full">
-              {
-                newBikeRacksList.map(newBikeRack => {
+          ) : (
+            <div className="flex-1 overflow-y-auto border rounded-lg p-4">
+              <div className="space-y-3">
+                {newBikeRacksList.map(newBikeRack => {
                   let address = newBikeRack.street ?
                     `${newBikeRack.street}, ${newBikeRack.number} - ${newBikeRack.zipCode}, ${newBikeRack.city} - ${newBikeRack.state}`
-                    : ""
+                    : "..."
                   return (
                     <OptionCard
+                      key={newBikeRack.id}
                       title={newBikeRack.name}
                       description={address}
-                      onCLickFunction={() => {
-                        handleAdd(newBikeRack.id)
-                      }}
+                      onClickFunction={() => handleAdd(newBikeRack.id)}
                     />
                   )
-                })
-              }
-            </ScrollArea>
-          }
-
+                })}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

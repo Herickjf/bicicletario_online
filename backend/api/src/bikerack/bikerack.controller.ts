@@ -123,6 +123,23 @@ export class BikerackController {
         return await this.service.update(id_biketrack, bikerack);
     }
 
+    @Patch('updateFull')
+    @ApiOperation({
+        summary: 'Atualização de Bicicletários',
+        description: 'Atualiza os dados de um bicicletário cadastrado no sistema'
+    })
+    async updateFull(@Body() bikerack:{
+        id: number,
+        name: string,
+        street: string,
+        num: number,
+        zip_code: string,
+        city: string,
+        state: string
+    }){
+        return await this.service.updateFull(bikerack);
+    }
+
     @Patch('updateMany')
     @ApiOperation({
         summary: 'Atualização em Massa de Bicicletários',

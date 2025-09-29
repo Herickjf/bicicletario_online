@@ -69,7 +69,7 @@ export class UserService {
     }
         
 
-    async setRole(id_user: number, id_bikerack: number, role: "owner" | "attendant" | "customer" | "manager"){
+    async createRole(id_user: number, id_bikerack: number, role: "owner" | "attendant" | "customer" | "manager"){
         try{
             return await this.database.query(
                 `
@@ -79,7 +79,21 @@ export class UserService {
                 `, [id_user, id_bikerack, role]
             );
         }catch(e){
-            throw new BadGatewayException('Erro ao tentar definir papel para User!');
+            throw new BadRequestException('Erro ao tentar definir papel para User!', e.message);
+        }
+    }
+
+    async changeRole(id_user: number, id_bikerack: number, role: "owner" | "attendant" | "customer" | "manager"){
+        try{
+            return await this.database.query(
+                `
+                UPDATE UsersRole
+                SET role = $3
+                WHERE user_id = $1 AND bike_rack_id = $2
+                `, [id_user, id_bikerack, role]
+            );
+        }catch(e){
+            throw new BadRequestException('Erro ao tentar definir papel para User!', e.message);
         }
     }
 
@@ -134,14 +148,16 @@ export class UserService {
         try{
             return await this.database.query(
                 `
-                    SELECT br.*
+                    SELECT br.*, a.*
                     FROM BikeRack br
+                    INNER JOIN Address a 
+                        ON br.address_id = a.address_id
                     WHERE NOT EXISTS (
                         SELECT 1
                         FROM UsersRole ur
                         WHERE ur.bike_rack_id = br.bike_rack_id
                         AND ur.user_id = $1
-                    );
+                    )
                 `,
                 [user_id]
             )

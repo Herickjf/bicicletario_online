@@ -26,7 +26,7 @@ export class UserController {
         return await this.service.login(body.email, body.password);
     }
 
-    @Post('setRole')
+    @Post('createRole')
     @ApiOperation({
         summary: 'Definição de Papel para User',
         description: 'Define um papel para um Users já cadastrado no sistema'
@@ -42,8 +42,28 @@ export class UserController {
             required: ['id_user', 'id_bikerack', 'role']
         }
     })
-    async setRole(@Body() body: {id_user: number, id_bikerack: number, role: "owner" | "attendant" | "customer" | "manager"}){
-        return await this.service.setRole(body.id_user, body.id_bikerack, body.role);
+    async createRole(@Body() body: {id_user: number, id_bikerack: number, role: "owner" | "attendant" | "customer" | "manager"}){
+        return await this.service.createRole(body.id_user, body.id_bikerack, body.role);
+    }
+
+    @Post('changeRole')
+    @ApiOperation({
+        summary: "Alteração de Papel de User",
+        description: "Altera o papel de um usuário já existente em um bicicletário"
+    })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                id_user: { type: 'number', example: 1 },
+                id_bikerack: { type: 'number', example: 1 },
+                role: { type: 'string', example: 'owner', enum: ['owner', 'attendant', 'customer', 'manager'] }
+            },
+            required: ['id_user', 'id_bikerack', 'role']
+        }
+    })
+    async changeRole(@Body() body: {id_user: number, id_bikerack: number, role: "owner" | "attendant" | "customer" | "manager"}){
+        return await this.service.changeRole(body.id_user, body.id_bikerack, body.role);
     }
 
     @Delete('deleteRole')
