@@ -20,47 +20,47 @@ const opcoes_relatorios = [
     {
         id: 3,
         category: "Financeiro",
-        description: "receita mensal"
+        description: "gráfico de receita mensal"
     },
     {
         id: 4,
         category: "Financeiro",
-        description: "receita anual"
+        description: "gráfico de receita anual"
     },
     {
         id: 5,
         category: "Financeiro",
-        description: "vendas por bicicleta"
+        description: "quantidade mensal de vendas por atendente"
     },
     {
         id: 6,
         category: "Financeiro",
-        description: "quantidade de vendas por atendente"
+        description: "quantidade anual de vendas por atendente"
     },
     {
         id: 7,
-        category: "Planos",
-        description: "clientes por plano"
+        category: "Financeiro",
+        description: "quantidade mensal de lucro por atendente"
     },
     {
         id: 8,
-        category: "Planos",
-        description: "receita por plano"
+        category: "Financeiro",
+        description: "quantidade anual de lucro por atendente"
     },
     {
         id: 9,
-        category: "Avaliações",
-        description: "avaliações do mês"
+        category: "Bicicletas",
+        description: "status das bicicletas"
     },
     {
         id: 10,
-        category: "Avaliações",
-        description: "avaliações do ano"
+        category: "Financeiro",
+        description: "ganho mensal"
     },
     {
         id: 11,
-        category: "Bicicletas",
-        description: "status das bicicletas"
+        category: "Financeiro",
+        description: "ganho anual"
     },
     {
         id: 12,
@@ -69,33 +69,23 @@ const opcoes_relatorios = [
     },
     {
         id: 13,
-        category: "Usuários",
-        description: "novos usuários no mês"
+        category: "Avaliações",
+        description: "média mensal de avaliações"
     },
     {
         id: 14,
-        category: "Usuários",
-        description: "novos usuários no ano"
+        category: "Financeiro",
+        description: "lucro mensal por bicicletas"
     },
     {
         id: 15,
-        category: "Planos",
-        description: "quantidade de planos cancelados no mês"
+        category: "Financeiro",
+        description: "lucro anual por bicicletas"
     },
     {
         id: 16,
-        category: "Planos",
-        description: "quantidade de planos cancelados no ano"
-    },
-    {
-        id: 17,
         category: "Financeiro",
         description: "receitas anuais"
-    },
-    {
-        id: 18,
-        category: "Financeiro",
-        description: "receita por atendente"
     },
 ]
 

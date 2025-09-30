@@ -128,6 +128,20 @@ export class BikerackController {
         summary: 'Atualização de Bicicletários',
         description: 'Atualiza os dados de um bicicletário cadastrado no sistema'
     })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                id: { type: 'number', example: 1 },
+                name: {type: 'string', example: 'Bicicletario Novo Nome'},
+                street: {type: 'string', example: 'Rua das Orquídeas'},
+                num: { type: 'number', example: 127 },
+                zip_code: {type: 'string', example: '57057030'},
+                city: { type: 'string', example: 'João Pessoa'},
+                state: {type: 'string', example: 'PB'},
+            }
+        }
+    })
     async updateFull(@Body() bikerack:{
         id: number,
         name: string,

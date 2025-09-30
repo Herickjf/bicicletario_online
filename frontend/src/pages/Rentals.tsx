@@ -19,9 +19,13 @@ import {
   DollarSign,
   Filter,
   CheckCircle,
-  XCircle
+  XCircle,
+  MousePointer2
 } from "lucide-react"
 import { RentStatus, Rent } from "@/types"
+import { useBikeRacks } from "@/contexts/bikerack-context"
+import { useNavigate } from "react-router-dom"
+import CantOpen from "@/components/layout/cant-open"
 
 const mockRentals: Rent[] = [
   {
@@ -87,6 +91,7 @@ const statusIcons = {
 }
 
 export default function Rentals() {
+  const {currentBikeRack} = useBikeRacks();
   const [rentals, setRentals] = useState(mockRentals)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<RentStatus | "all">("all")
@@ -159,6 +164,11 @@ export default function Rentals() {
     })
     setIsDialogOpen(true)
   }
+
+  if(!currentBikeRack){
+    return(
+      <CantOpen pageName="Aluguéis"/>
+  )}
 
   return (
     <DashboardLayout>

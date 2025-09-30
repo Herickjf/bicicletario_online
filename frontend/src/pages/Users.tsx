@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Edit, Trash2, Users as UsersIcon, Mail, Phone, Filter, UserCheck, Shield, Crown } from "lucide-react";
 import { UserRole, User } from "@/types";
 import { useAuth } from "@/contexts/auth-context";
+import { useBikeRacks } from "@/contexts/bikerack-context";
+import CantOpen from "@/components/layout/cant-open";
 interface UserWithRole extends User {
   role: UserRole;
 }
@@ -67,7 +69,7 @@ const roleIcons = {
 };
 export default function Users() {
   const { user } = useAuth();
-  // const [users, setUsers] = useState(mockUsers);
+  const { currentBikeRack } = useBikeRacks();
   const [ usuarios, setUsuarios ] = useState<UserWithRole[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
@@ -201,6 +203,11 @@ export default function Users() {
 
     
   }, [])
+
+  if(!currentBikeRack){
+    return(
+      <CantOpen pageName="Usuários"/>
+  )}
 
   return <DashboardLayout>
       <div className="space-y-6">

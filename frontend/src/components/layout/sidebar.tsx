@@ -42,7 +42,7 @@ const getMenuItems = (role: string) => {
         icon: BarChart3,
         label: "Relatórios",
         href: "/reports"
-      }, {
+      },{
         icon: Settings,
         label: "Configurações",
         href: "/settings"
@@ -68,6 +68,10 @@ const getMenuItems = (role: string) => {
         icon: BarChart3,
         label: "Relatórios",
         href: "/reports"
+      },{
+        icon: Settings,
+        label: "Configurações",
+        href: "/settings"
       }];
     case 'attendant':
       return [...baseItems, {
@@ -82,16 +86,24 @@ const getMenuItems = (role: string) => {
         icon: Bike,
         label: "Bicicletas",
         href: "/bikes"
+      },{
+        icon: Settings,
+        label: "Configurações",
+        href: "/settings"
       }];
     case 'customer':
       return [...baseItems, {
         icon: Calendar,
         label: "Meus Aluguéis",
-        href: "/my-rentals"
+        href: "/rentals"
       }, {
         icon: CreditCard,
         label: "Planos",
-        href: "/subscriptions"
+        href: "/plans"
+      }, {
+        icon: Settings,
+        label: "Configurações",
+        href: "/settings"
       }];
     default:
       return baseItems;

@@ -136,8 +136,8 @@ CREATE TABLE IF NOT EXISTS Subscription(
 CREATE TABLE IF NOT EXISTS Rent(
     rent_id         SERIAL,
     rent_date       DATE DEFAULT CURRENT_DATE,
-    init_time       TIME DEFAULT CURRENT_TIME,
-    end_time        TIME NOT NULL,
+    init_time       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_time        TIMESTAMP NOT NULL,
     total_value     NUMERIC(6,2) NOT NULL,
     status          RentStatus DEFAULT 'active',
     bike_id         INTEGER DEFAULT NULL,
@@ -175,10 +175,6 @@ CREATE TABLE IF NOT EXISTS Notification(
     recipient_id    INTEGER NOT NULL,
     sender_id       INTEGER DEFAULT NULL,
     PRIMARY KEY (notification_id),
-    CONSTRAINT fk_user
-        FOREIGN KEY (user_id)
-        REFERENCES Users(user_id)
-        ON DELETE CASCADE,
     CONSTRAINT fk_sender
         FOREIGN KEY (sender_id)
         REFERENCES Users(user_id)

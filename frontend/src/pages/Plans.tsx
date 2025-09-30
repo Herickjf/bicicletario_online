@@ -9,7 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Crown, Star, Zap, CreditCard } from "lucide-react";
+import { Plus, Pencil, Trash2, Crown, Star, Zap, CreditCard, MousePointer2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useBikeRacks } from "@/contexts/bikerack-context";
+import CantOpen from "@/components/layout/cant-open";
 
 interface Plan {
   id: number;
@@ -24,6 +27,7 @@ interface Plan {
 
 const Plans = () => {
   const { toast } = useToast();
+  const {currentBikeRack} = useBikeRacks();
   const [plans, setPlans] = useState<Plan[]>([
     {
       id: 1,
@@ -145,6 +149,11 @@ const Plans = () => {
     if (planName.toLowerCase().includes("estudante")) return <Star className="h-5 w-5 text-blue-500" />;
     return <Zap className="h-5 w-5 text-primary" />;
   };
+
+  if(!currentBikeRack){
+    return(
+      <CantOpen pageName="Planos"/>
+  )}
 
   return (
     <DashboardLayout>

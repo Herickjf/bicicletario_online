@@ -25,6 +25,7 @@ import {
   Sun,
   Monitor
 } from "lucide-react"
+import { useBikeRacks } from "@/contexts/bikerack-context"
 
 export default function Settings() {
   const { user } = useAuth()

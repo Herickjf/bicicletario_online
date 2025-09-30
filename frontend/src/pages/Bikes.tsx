@@ -15,10 +15,14 @@ import {
   Trash2, 
   Settings,
   Bike as BikeIcon,
-  Filter
+  Filter,
+  MousePointer2
 } from "lucide-react"
 import { BikeStatus, Bike } from "@/types"
 import { useAuth } from "@/contexts/auth-context"
+import { useBikeRacks } from "@/contexts/bikerack-context"
+import { useNavigate } from "react-router-dom"
+import CantOpen from "@/components/layout/cant-open"
 
 const mockBikes: Bike[] = [
   {
@@ -77,6 +81,7 @@ const statusLabels = {
 
 export default function Bikes() {
   const { user } = useAuth();
+  const {currentBikeRack} = useBikeRacks();
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -188,6 +193,11 @@ export default function Bikes() {
 
 
   }, [])
+
+  if(!currentBikeRack){
+    return(
+      <CantOpen pageName="Bicicletas"/>
+  )}
 
   return (
     <DashboardLayout>

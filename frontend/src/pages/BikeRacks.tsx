@@ -318,16 +318,14 @@ const BikeRacks = () => {
         },
         body: JSON.stringify({
           id: editingBikeRack.id,
-          name: editingBikeRack.name,
-          street: editingBikeRack.address.street,
-          num: editingBikeRack.address.number,
-          zip_code: editingBikeRack.address.zip_code,
-          city: editingBikeRack.address.city,
-          state: editingBikeRack.address.state,
+          name: formData.name,
+          street: formData.street,
+          num: formData.num,
+          zip_code: formData.zipCode,
+          city: formData.city,
+          state: formData.state,
         })
       });
-
-      console.log(res)
 
       if(!res.ok){
         toast({
@@ -352,7 +350,7 @@ const BikeRacks = () => {
     }finally{
       setIsDialogOpen(false);
     }
-  }
+  } 
 
   const handleDelete = async (bike_rack_id: number, role: UserRole) => {
 

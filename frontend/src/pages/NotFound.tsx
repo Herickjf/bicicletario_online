@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Bird, Snail } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,16 +13,16 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-gray-600">Oops! Page not found</p>
-        {/* <Button ref={"/"}>Return to Home</Button> */}
-        {/* <Button onClick={() => nav("/")} className="gap-2"> 
-          Return to Home
-        </Button> */}
-        <a href="/" className="text-blue-500 underline hover:text-blue-700">
-          Return to Home
-        </a>
+      <div className="flex flex-col gap-4 items-center">
+        <Snail className="h-20 w-20"/>
+        <div className="text-center">
+
+          <h1 className="mb-4 text-4xl font-bold">Oops</h1>
+          <p className="mb-4 text-xl text-gray-500">Página não encontrada</p>
+          <a href="/" className="text-white underline hover:text-blue-100">
+            Retornar ao início
+          </a>
+        </div>
       </div>
     </div>
   );

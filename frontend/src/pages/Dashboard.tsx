@@ -20,6 +20,7 @@ import { useEffect, useState } from "react"
 import { Label } from "@/components/ui/label"
 import { add } from "date-fns"
 import { useBikeRacks } from "@/contexts/bikerack-context"
+import CantOpen from "@/components/layout/cant-open"
 
 const StatCard = ({ title, value, description, icon: Icon, trend }: {
   title: string
@@ -118,7 +119,6 @@ interface clientes {
 }
 
 export default function Dashboard() {
-  const nav = useNavigate()
   const {currentBikeRack} = useBikeRacks();
   const { user, userRole,authLoading } = useAuth()
 
@@ -405,22 +405,7 @@ export default function Dashboard() {
 
   if(!currentBikeRack){
     return(
-      <DashboardLayout>
-        <div className="min-h-full flex flex-col items-center justify-center gap-4 p-10">
-          <Label className="text-2xl text-center">Você precisa se conectar a um bicicletário para ter acesso ao DashBoard!</Label>
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={() => nav('/bikeracks')}
-            className="flex items-center"
-          >
-            <MousePointer2
-              className="mr-2 h-4 w-4"
-            />
-            Ver Bicicletários
-          </Button>
-        </div>
-      </DashboardLayout>
+      <CantOpen pageName="Dashboard"/>
   )}
 
   return (
