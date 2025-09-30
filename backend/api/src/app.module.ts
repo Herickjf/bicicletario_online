@@ -19,9 +19,10 @@ import { NotificationModule } from './notification/notification.module';
 import { ReviewService } from './review/review.service';
 import { ReviewController } from './review/review.controller';
 import { ReviewModule } from './review/review.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
-  imports: [DatabaseModule, BikerackModule, UserModule, AuthModule, PlanModule, NotificationModule, ReviewModule],
+  imports: [DatabaseModule, BikerackModule, UserModule, AuthModule, PlanModule, NotificationModule, ReviewModule, ReportsModule],
   controllers: [AppController, UserController, AuthController, PlanController, NotificationController, ReviewController],
   providers: [AppService, BikerackService, UserService, AuthService, PlanService, NotificationService, ReviewService],
 })

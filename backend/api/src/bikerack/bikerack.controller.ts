@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Delete, Patch, BadRequestException, Param } from '@nestjs/common';
+import { Body, Controller, Post, Get, Delete, Patch, BadRequestException, Param, Put } from '@nestjs/common';
 import { BikerackService } from './bikerack.service';
 import { ApiBody, ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
 import BikeRackDto from 'src/dtos/BikeRack.dto';
@@ -123,7 +123,7 @@ export class BikerackController {
         return await this.service.update(id_biketrack, bikerack);
     }
 
-    @Patch('updateFull')
+    @Put('updateFull')
     @ApiOperation({
         summary: 'Atualização de Bicicletários',
         description: 'Atualiza os dados de um bicicletário cadastrado no sistema'

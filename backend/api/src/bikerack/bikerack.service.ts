@@ -312,8 +312,8 @@ export class BikerackService {
 
         try{
 
-            const br_ret = this.database.query(query1, [bikerack.name, bikerack.id])[0];
-            const addr_ret = this.database.query(query2, [
+            const br_ret = await this.database.query(query1, [bikerack.name, bikerack.id])[0];
+            const addr_ret = await this.database.query(query2, [
                 bikerack.street,
                 bikerack.num,
                 bikerack.zip_code,

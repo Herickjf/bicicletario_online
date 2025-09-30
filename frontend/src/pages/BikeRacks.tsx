@@ -311,7 +311,7 @@ const BikeRacks = () => {
   const handleEdit = async () => {
     try{
       const res = await fetch(`http://localhost:4000/bikerack/updateFull`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': "application/json",
           'Authorization': 'Bearer ' + localStorage.getItem('token')
