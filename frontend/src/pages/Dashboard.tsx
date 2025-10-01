@@ -128,7 +128,7 @@ export default function Dashboard() {
   const [ clientesInfo, setClientesInfo ] = useState<clientes | null>(null);
   
   useEffect(() => {
-    if (!currentBikeRack.id) return;
+    if (!currentBikeRack?.id) return;
     
     fetch(`http://localhost:4000/bikerack/mainScreenInfo/${currentBikeRack.id}`)
       .then(res => res.json())
@@ -140,6 +140,20 @@ export default function Dashboard() {
       })
       .catch(err => console.error('Erro ao buscar informações das bicicletas:', err));
   }, [currentBikeRack])
+
+  useEffect(() => {
+    if (!currentBikeRack?.id) return;
+    
+    fetch(`http://localhost:4000/bikerack/mainScreenInfo/${currentBikeRack.id}`)
+      .then(res => res.json())
+      .then(data => {
+        setBicicletasInfo({num_bicicletas: data[0].num_bicicletas});
+        setAlugueisInfo({num_alugueis: data[0].num_alugueis});
+        setReceitaInfo({receita_mensal: data[0].receita_mensal, percent_aumento: data[0].percent_aumento});
+        setClientesInfo({num_clientes: data[0].num_clientes});
+      })
+      .catch(err => console.error('Erro ao buscar informações das bicicletas:', err));
+  }, [])
 
   // console.log("currentBikerack: ", currentBikeRack)
   if (authLoading) {

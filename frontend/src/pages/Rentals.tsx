@@ -364,7 +364,6 @@ export default function Rentals() {
       }))
       
       setRentals(processedData)
-      // console.log("Dados processados:", processedData)
       
     } catch (error) {
       toast({

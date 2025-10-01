@@ -30,11 +30,16 @@ const Plans = () => {
 
   useEffect(() => {
     if(!currentBikeRack?.id) return;
-    fetch("http://localhost:4000/plan/list/" + currentBikeRack?.id)
+    fetch("http://localhost:4000/plan/list/" + currentBikeRack.id)
     .then(response => response.json())
     .then(data => {
-      console.log(data)
+      // console.log(data)
       setPlans(data)
+    }).catch(err => {
+      toast({
+        title:"Erro ao buscar planos.",
+        variant: "destructive"
+      })
     })
   }, [currentBikeRack])
 
@@ -48,11 +53,6 @@ const Plans = () => {
     active: false,
     plan_id: 0
   });
-
-  const bikeRacks = [
-    { id: 1, name: "Centro - Praça da Sé" },
-    { id: 2, name: "Ibirapuera - Portão 2" },
-  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,7 +176,14 @@ const Plans = () => {
                 className="bg-primary hover:bg-primary/90"
                 onClick={() => {
                   setEditingPlan(null);
-                  setFormData({ name: "", description: "", price: "", bikeRackId: 1 });
+                  setFormData({
+                    name: "",
+                    description: "",
+                    price: "",
+                    bikeRackId: 1,
+                    active: false,
+                    plan_id: 0
+                  });
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />
