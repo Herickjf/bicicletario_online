@@ -40,7 +40,7 @@ export class PlanDto {
         description: "Indica se o plano está ativo"
     })
     @IsOptional()
-    isActive: boolean;
+    active: boolean;
 
     @ApiProperty({
         example: 30,

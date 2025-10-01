@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,51 +15,28 @@ import { useBikeRacks } from "@/contexts/bikerack-context";
 import CantOpen from "@/components/layout/cant-open";
 
 interface Plan {
-  id: number;
+  plan_id: number;
   name: string;
   description: string;
-  price: number;
-  bikeRackId: number;
-  bikeRackName: string;
-  isActive: boolean;
-  subscribers: number;
+  price: number | string;
+  bike_rack_id: number;
+  active: boolean;
 }
 
 const Plans = () => {
   const { toast } = useToast();
   const {currentBikeRack} = useBikeRacks();
-  const [plans, setPlans] = useState<Plan[]>([
-    {
-      id: 1,
-      name: "Plano Básico",
-      description: "Acesso a bicicletas por 30 dias com 2 horas diárias incluídas",
-      price: 29.90,
-      bikeRackId: 1,
-      bikeRackName: "Centro - Praça da Sé",
-      isActive: true,
-      subscribers: 45,
-    },
-    {
-      id: 2,
-      name: "Plano Premium",
-      description: "Acesso ilimitado a bicicletas por 30 dias",
-      price: 59.90,
-      bikeRackId: 1,
-      bikeRackName: "Centro - Praça da Sé",
-      isActive: true,
-      subscribers: 23,
-    },
-    {
-      id: 3,
-      name: "Plano Estudante",
-      description: "Desconto especial para estudantes com 1 hora diária incluída",
-      price: 19.90,
-      bikeRackId: 2,
-      bikeRackName: "Ibirapuera - Portão 2",
-      isActive: false,
-      subscribers: 12,
-    },
-  ]);
+  const [plans, setPlans] = useState<Plan[]>([]);
+
+  useEffect(() => {
+    if(!currentBikeRack?.id) return;
+    fetch("http://localhost:4000/plan/list/" + currentBikeRack?.id)
+    .then(response => response.json())
+    .then(data => {
+      console.log(data)
+      setPlans(data)
+    })
+  }, [currentBikeRack])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
@@ -68,6 +45,8 @@ const Plans = () => {
     description: "",
     price: "",
     bikeRackId: 1,
+    active: false,
+    plan_id: 0
   });
 
   const bikeRacks = [
@@ -80,12 +59,11 @@ const Plans = () => {
     
     if (editingPlan) {
       setPlans(prev => prev.map(plan => 
-        plan.id === editingPlan.id 
+        plan.plan_id === editingPlan.plan_id 
           ? { 
               ...plan, 
               ...formData, 
               price: parseFloat(formData.price),
-              bikeRackName: bikeRacks.find(br => br.id === formData.bikeRackId)?.name || ""
             }
           : plan
       ));
@@ -95,12 +73,11 @@ const Plans = () => {
       });
     } else {
       const newPlan: Plan = {
-        id: Date.now(),
+        plan_id: Date.now(),
         ...formData,
         price: parseFloat(formData.price),
-        bikeRackName: bikeRacks.find(br => br.id === formData.bikeRackId)?.name || "",
-        isActive: true,
-        subscribers: 0,
+        bike_rack_id: currentBikeRack?.id,
+        active: true,
       };
       setPlans(prev => [...prev, newPlan]);
       toast({
@@ -111,7 +88,7 @@ const Plans = () => {
 
     setIsDialogOpen(false);
     setEditingPlan(null);
-    setFormData({ name: "", description: "", price: "", bikeRackId: 1 });
+    setFormData({ name: "", description: "", price: "", bikeRackId: 1, active: false, plan_id: 0 });
   };
 
   const handleEdit = (plan: Plan) => {
@@ -120,28 +97,57 @@ const Plans = () => {
       name: plan.name,
       description: plan.description,
       price: plan.price.toString(),
-      bikeRackId: plan.bikeRackId,
+      bikeRackId: plan.bike_rack_id,
+      active: plan.active,
+      plan_id: plan.plan_id
     });
     setIsDialogOpen(true);
   };
 
   const handleDelete = (id: number) => {
-    setPlans(prev => prev.filter(plan => plan.id !== id));
-    toast({
-      title: "Plano removido",
-      description: "O plano foi excluído.",
-      variant: "destructive",
-    });
+    fetch("http://localhost:4000/plan/delete", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        bike_rack_id: currentBikeRack?.id,
+        id_plan: id
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      setPlans(prev => prev.filter(plan => plan.plan_id !== id));
+      toast({
+        title: "Plano removido",
+        description: "O plano foi excluído.",
+        variant: "destructive",
+      });
+    })
   };
 
   const togglePlanStatus = (id: number) => {
-    setPlans(prev => prev.map(plan => 
-      plan.id === id ? { ...plan, isActive: !plan.isActive } : plan
-    ));
-    toast({
-      title: "Status alterado",
-      description: "O status do plano foi atualizado.",
-    });
+    fetch("http://localhost:4000/plan/activate", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        bike_rack_id: currentBikeRack?.id,
+        id_plan: id
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      setPlans(prev => prev.map(plan => 
+        plan.plan_id === id ? { ...plan, active: !plan.active } : plan
+      ));
+      toast({
+        title: "Status alterado",
+        description: "O status do plano foi atualizado.",
+      });
+    })
+
   };
 
   const getPlanIcon = (planName: string) => {
@@ -221,7 +227,7 @@ const Plans = () => {
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <Label htmlFor="bikeRack">Bicicletário</Label>
                     <select
                       id="bikeRack"
@@ -236,7 +242,7 @@ const Plans = () => {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="flex justify-end space-x-2">
@@ -258,15 +264,15 @@ const Plans = () => {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan) => (
-            <Card key={plan.id} className="border-border/50 hover:border-primary/50 transition-all">
+            <Card key={plan.plan_id} className="border-border/50 hover:border-primary/50 transition-all">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-2">
                     {getPlanIcon(plan.name)}
                     <CardTitle className="text-lg">{plan.name}</CardTitle>
                   </div>
-                  <Badge variant={plan.isActive ? "default" : "secondary"}>
-                    {plan.isActive ? "Ativo" : "Inativo"}
+                  <Badge variant={plan.active ? "default" : "secondary"}>
+                    {plan.active ? "Ativo" : "Inativo"}
                   </Badge>
                 </div>
               </CardHeader>
@@ -280,29 +286,26 @@ const Plans = () => {
                     <div className="flex items-center space-x-1">
                       <CreditCard className="h-4 w-4 text-primary" />
                       <span className="text-2xl font-bold text-primary">
-                        R$ {plan.price.toFixed(2)}
+                        R$ {plan.price}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">por mês</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-semibold">{plan.subscribers}</p>
-                    <p className="text-xs text-muted-foreground">assinantes</p>
+                    {/* <p className="text-lg font-semibold">{plan.subscribers}</p>
+                    <p className="text-xs text-muted-foreground">assinantes</p> */}
                   </div>
                 </div>
 
-                <div className="text-xs text-muted-foreground">
-                  {plan.bikeRackName}
-                </div>
 
                 <div className="flex space-x-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => togglePlanStatus(plan.id)}
+                    onClick={() => togglePlanStatus(plan.plan_id)}
                     className="flex-1"
                   >
-                    {plan.isActive ? "Desativar" : "Ativar"}
+                    {plan.active ? "Desativar" : "Ativar"}
                   </Button>
                   <Button
                     variant="outline"
@@ -314,7 +317,7 @@ const Plans = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDelete(plan.id)}
+                    onClick={() => handleDelete(plan.plan_id)}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />

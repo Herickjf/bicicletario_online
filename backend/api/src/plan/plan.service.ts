@@ -71,7 +71,7 @@ export class PlanService {
           plan.name,
           plan.description ?? null,
           plan.price,
-          plan.isActive ?? true,
+          plan.active ?? true,
           plan.bike_rack_id,
         ],
       );
@@ -99,7 +99,7 @@ export class PlanService {
           plan.name,
           plan.description ?? null,
           plan.price,
-          plan.isActive ?? true,
+          plan.active ?? true,
           plan.plan_id,
           plan.bike_rack_id,
         ],
