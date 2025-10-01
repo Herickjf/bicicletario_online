@@ -18,9 +18,9 @@ export function Header() {
 
   return (
     <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
-      <div className="flex h-14 items-center gap-4 px-4 lg:px-6">
+      <div className="flex h-14 items-center justify-between gap-4 px-4 lg:px-6">
         <h1 className="text-2xl">{currentBikeRack ? `Bicicletário: ${currentBikeRack.name}` : 'Escolha um bicicletário'}</h1>
-        <div className="flex-1">
+        {/* <div className="flex-1">
           <div className="relative max-w-md">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -30,10 +30,10 @@ export function Header() {
             />
           </div>
 
-        </div>
+        </div> */}
         
         <div className="flex items-center gap-2">
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 w-8 px-0 relative">
                 <Bell className="h-4 w-4" />
@@ -70,7 +70,7 @@ export function Header() {
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
           
           <div className="flex items-center space-x-2">
             <span className="text-sm font-medium">Olá, {user?.name}</span>

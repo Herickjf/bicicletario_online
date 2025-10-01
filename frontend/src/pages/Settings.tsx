@@ -276,7 +276,7 @@ export default function Settings() {
           </Card>
 
           {/* Notificações */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
@@ -340,10 +340,10 @@ export default function Settings() {
                 Salvar Preferências
               </Button>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Segurança */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
@@ -400,7 +400,7 @@ export default function Settings() {
                 Salvar Segurança
               </Button>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </DashboardLayout>
