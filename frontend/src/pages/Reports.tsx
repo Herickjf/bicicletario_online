@@ -270,6 +270,7 @@ export default function Reports() {
       
       const data = await res.text();
 
+
       setReports(prev => prev.map(report => 
         report.id === newReport.id 
           ? { ...report, status: "completed", report: data }
@@ -348,10 +349,12 @@ const handleDownloadReport = async (reportId: number) => {
         </head>
         <body>
           <div class="report-container">
-            ${report.report.replace(
+            ${
+            report.report.replace(
               /<svg[\s\S]*?<\/svg>/gi,
               `<div class="chart-placeholder">Gráfico (somente na versão web)</div>`
-            )}
+            )
+            }
           </div>
         </body>
       </html>
@@ -669,7 +672,7 @@ const handleDownloadReport = async (reportId: number) => {
                             </p>
                           )}
                           <p className="mt-3 text-xs text-muted-foreground">
-                            Criado em {new Date(report.createdAt).toLocaleDateString()}
+                            Criado em {new Date(report.createdAt).toLocaleDateString('pt-BR')} {new Date(report.createdAt).toLocaleTimeString('pt-BR')}
                           </p>
                         </div>
                       </div>

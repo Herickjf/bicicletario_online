@@ -341,7 +341,6 @@ export class ReportsService {
         }
         if (options.includes(11)){
             data.ganhoAnual = await this.GanhoAnual(bike_rack_id);
-            console.log(data.ganhoAnual)
         } 
         // if (options.includes(12)) data.mediaAvaliacoesMensal = await this.MediaAvaliacoesMensal(bike_rack_id);
         // if (options.includes(13)) data.mediaAvaliacoesAnual = await this.MediaAvaliacoesAnual(bike_rack_id);
@@ -388,6 +387,11 @@ export class ReportsService {
                         color: hsl(var(--foreground));
                         font-size: 14px;
                         line-height: 1.5;
+                    }
+
+                    svg {
+                        width: 100% !important;
+                        height: auto !important;
                     }
                     
                     .page {
@@ -587,19 +591,24 @@ export class ReportsService {
                                 </div>
                             ` : ''}
                         </div>
-                        
+
                         ${options.includes(9) ? `
                             <div class="chart-container">
                                 <div class="chart-title">Status das Bicicletas</div>
                                 ${data.statusBicicletas && data.statusBicicletas.length > 0 ? `
-                                    <div class="status-grid">
-                                        ${data.statusBicicletas.map(s => `
-                                            <div class="status-item">
-                                                <div class="status-value">${s.qtd_bicicletas}</div>
-                                                <div class="status-label">${s.status}</div>
-                                            </div>
-                                        `).join('')}
-                                    </div>
+                                    <table>
+                                        <thead>
+                                            <tr><th>Status</th><th>Quantidade</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.statusBicicletas.map(s => `
+                                                <tr>
+                                                    <td>${s.status}</td>
+                                                    <td>${s.qtd_bicicletas}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
                                 ` : '<p class="no-data">Sem dados de status das bicicletas</p>'}
                             </div>
                         ` : ''}
@@ -611,7 +620,7 @@ export class ReportsService {
                         <div class="section-header">
                             <h2>Desempenho Financeiro - Mensal</h2>
                         </div>
-                        
+
                         ${options.includes(10) ? `
                             <div class="grid">
                                 <div class="card">
@@ -632,70 +641,42 @@ export class ReportsService {
                                 </div>
                             </div>
                         ` : ''}
-                        
+
                         ${options.includes(3) && data.receitaMensal && data.receitaMensal.length > 0 ? `
                             <div class="chart-container">
                                 <div class="chart-title">Receita Diária - Mês Atual</div>
-                                <svg width="100%" height="200" viewBox="0 0 600 200">
-                                    <!-- Eixos -->
-                                    <line x1="50" y1="20" x2="50" y2="180" stroke="hsl(var(--border))" stroke-width="1"/>
-                                    <line x1="50" y1="180" x2="550" y2="180" stroke="hsl(var(--border))" stroke-width="1"/>
-                                    
-                                    <!-- Linha do gráfico -->
-                                    <polyline 
-                                        points="${data.receitaMensal.map((r, i) => 
-                                            `${50 + (i * 500/(data.receitaMensal.length-1))},${180 - (r.receita/ Math.max(...data.receitaMensal.map(d => d.receita)) * 150)}`
-                                        ).join(' ')}" 
-                                        fill="none" 
-                                        stroke="hsl(var(--primary))" 
-                                        stroke-width="2"
-                                    />
-                                    
-                                    <!-- Pontos -->
-                                    ${data.receitaMensal.map((r, i) => `
-                                        <circle 
-                                            cx="${50 + (i * 500/(data.receitaMensal.length-1))}" 
-                                            cy="${180 - (r.receita/ Math.max(...data.receitaMensal.map(d => d.receita)) * 150)}" 
-                                            r="3" 
-                                            fill="hsl(var(--primary))"
-                                        />
-                                    `).join('')}
-                                </svg>
+                                <table>
+                                    <thead>
+                                        <tr><th>Dia</th><th>Receita (R$)</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.receitaMensal.map((r, i) => `
+                                            <tr>
+                                                <td>${i+1}</td>
+                                                <td>${r.receita}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
                             </div>
                         ` : options.includes(3) ? '<p class="no-data">Sem dados de receita mensal</p>' : ''}
                     </div>
                     ` : ''}
-                    
+
                     <div class="page-footer">
                         Página 1 de 3 | Relatório Gerencial - Estação de Bicicletas
                     </div>
                 </div>
 
-                ${(options.includes(11) || options.includes(4) || options.includes(16)) ? `
+                ${(options.includes(11) || options.includes(16)) ? `
                 <div class="page">
                     <div class="header">
                         <h1>Análise de Receita Anual</h1>
                     </div>
 
                     ${options.includes(11) && data.ganhoAnual && data.ganhoAnual.length > 0 ? `
-                    <div class="section">
-                        <div class="section-header">
-                            <h2>Ganhos Mensais - ${new Date().getFullYear()}</h2>
-                        </div>
                         <div class="chart-container">
                             <div class="chart-title">Distribuição de Ganhos por Mês (Aluguéis + Planos)</div>
-                            <svg width="100%" height="250" viewBox="0 0 600 250">
-                                <line x1="50" y1="220" x2="550" y2="220" stroke="hsl(var(--border))" stroke-width="1"/>
-                                ${data.ganhoAnual.map((r, i) => {
-                                    const x = 80 + (i * 440/11);
-                                    const height = (r.ganho_total/ Math.max(...data.ganhoAnual.map(d => d.ganho_total)) * 180);
-                                    return `
-                                        <rect x="${x-15}" y="${220 - height}" width="30" height="${height}" fill="hsl(var(--primary))" opacity="0.7"/>
-                                        <text x="${x}" y="235" text-anchor="middle" font-size="10" fill="hsl(var(--muted-foreground))">${i+1}</text>
-                                    `;
-                                }).join('')}
-                            </svg>
-                            
                             <table>
                                 <thead>
                                     <tr>
@@ -717,29 +698,28 @@ export class ReportsService {
                                 </tbody>
                             </table>
                         </div>
-                    </div>
                     ` : ''}
 
                     ${options.includes(16) && data.receitasAnuais && data.receitasAnuais.length > 0 ? `
-                    <div class="section">
-                        <div class="section-header">
-                            <h2>Receita Histórica Anual</h2>
-                        </div>
                         <div class="chart-container">
                             <div class="chart-title">Evolução da Receita por Ano</div>
-                            <svg width="100%" height="200" viewBox="0 0 600 200">
-                                <line x1="50" y1="180" x2="550" y2="180" stroke="hsl(var(--border))" stroke-width="1"/>
-                                ${data.receitasAnuais.map((r, i) => {
-                                    const x = 50 + (i * 500/(data.receitasAnuais.length-1));
-                                    const height = (r.ganho_total/ Math.max(...data.receitasAnuais.map(d => d.ganho_total)) * 150);
-                                    return `
-                                        <rect x="${x-12}" y="${180 - height}" width="24" height="${height}" fill="hsl(var(--primary))"/>
-                                        <text x="${x}" y="195" text-anchor="middle" font-size="10" fill="hsl(var(--muted-foreground))">${new Date(r.year).getFullYear()}</text>
-                                    `;
-                                }).join('')}
-                            </svg>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Ano</th>
+                                        <th>Receita (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.receitasAnuais.map(r => `
+                                        <tr>
+                                            <td>${new Date(r.year).getFullYear()}</td>
+                                            <td>${r.receita}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
                     ` : ''}
 
                     <div class="page-footer">
@@ -748,72 +728,93 @@ export class ReportsService {
                 </div>
                 ` : ''}
 
-                ${(options.includes(14) || options.includes(15) || options.includes(5) || options.includes(6) || options.includes(7) || options.includes(8) || options.includes(12) || options.includes(13)) ? `
+                ${(options.includes(5) || options.includes(6) || options.includes(7) || options.includes(8) || options.includes(14) || options.includes(15) || options.includes(12) || options.includes(13)) ? `
                 <div class="page">
                     <div class="header">
                         <h1>Métricas Detalhadas</h1>
                     </div>
 
-                    ${(options.includes(14) || options.includes(15)) ? `
-                    <div class="section">
-                        <div class="section-header">
-                            <h2>Receita por Bicicleta</h2>
+                    ${options.includes(14) && data.receitaPorBicicletaMensal && data.receitaPorBicicletaMensal.length > 0 ? `
+                        <div class="chart-container">
+                            <div class="chart-title">Top 10 Bicicletas - Maior Receita Mensal</div>
+                            <table>
+                                <thead>
+                                    <tr><th>Bicicleta</th><th>Receita Mensal (R$)</th></tr>
+                                </thead>
+                                <tbody>
+                                    ${data.receitaPorBicicletaMensal.slice(0,10).map(r => `
+                                        <tr>
+                                            <td>${r.bike_id}</td>
+                                            <td>${r.receita_mensal}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
                         </div>
-                        
-                        ${options.includes(14) && data.receitaPorBicicletaMensal && data.receitaPorBicicletaMensal.length > 0 ? `
-                            <div class="chart-container">
-                                <div class="chart-title">Top 10 Bicicletas - Maior Receita Mensal</div>
-                                <svg width="100%" height="220" viewBox="0 0 600 220">
-                                    <line x1="50" y1="200" x2="550" y2="200" stroke="hsl(var(--border))" stroke-width="1"/>
-                                    ${data.receitaPorBicicletaMensal.slice(0,10).map((r, i) => {
-                                        const height = (r.receita_mensal/ Math.max(...data.receitaPorBicicletaMensal.slice(0,10).map(d => d.receita_mensal)) * 150);
-                                        return `
-                                            <rect x="${60 + (i * 48)}" y="${200 - height}" width="30" height="${height}" fill="hsl(var(--primary))" opacity="0.8"/>
-                                            <text x="${75 + (i * 48)}" y="215" text-anchor="middle" font-size="9" fill="hsl(var(--muted-foreground))">${r.bike_id}</text>
-                                        `;
-                                    }).join('')}
-                                </svg>
-                            </div>
-                        ` : ''}
-                    </div>
                     ` : ''}
 
-                    ${(options.includes(5) || options.includes(6) || options.includes(7) || options.includes(8)) ? `
-                    <div class="section">
-                        <div class="section-header">
-                            <h2>Desempenho dos Atendentes</h2>
-                        </div>
-                        
-                        ${options.includes(7) && data.qtdLucroMensal && data.qtdLucroMensal.length > 0 ? `
-                            <div class="chart-container">
-                                <div class="chart-title">Lucro Gerado por Atendente (Mês Atual)</div>
-                                <svg width="100%" height="200" viewBox="0 0 600 200">
-                                    <line x1="50" y1="180" x2="550" y2="180" stroke="hsl(var(--border))" stroke-width="1"/>
-                                    ${Array.from(new Set(data.qtdLucroMensal.map(r => r.id_funcionario))).slice(0,8).map((funcId, i) => {
-                                        const funcData = data.qtdLucroMensal.filter(r => r.id_funcionario === funcId);
-                                        const total = funcData.reduce((sum, r) => sum + parseFloat(r.qtd_total || 0), 0);
-                                        const maxTotal = Math.max(...Array.from(new Set(data.qtdLucroMensal.map(r => r.id_funcionario))).map(id => 
-                                            data.qtdLucroMensal.filter(r => r.id_funcionario === id).reduce((sum, r) => sum + parseFloat(r.qtd_total || 0), 0)
-                                        ));
-                                        const height = (total/maxTotal * 150);
-                                        return `
-                                            <rect x="${60 + (i * 60)}" y="${180 - height}" width="40" height="${height}" fill="hsl(var(--primary))" opacity="0.7"/>
-                                            <text x="${80 + (i * 60)}" y="195" text-anchor="middle" font-size="9" fill="hsl(var(--muted-foreground))">${funcId}</text>
-                                        `;
+                    ${options.includes(7) && data.qtdLucroMensal && data.qtdLucroMensal.length > 0 ? `
+                        <div class="chart-container">
+                            <div class="chart-title">Lucro Gerado por Atendente (Mês Atual)</div>
+                            <table>
+                                <thead>
+                                    <tr><th>Atendente</th><th>Total (R$)</th></tr>
+                                </thead>
+                                <tbody>
+                                    ${Array.from(new Set(data.qtdLucroMensal.map(r => r.id_funcionario))).map(funcId => {
+                                        const total = data.qtdLucroMensal
+                                            .filter(r => r.id_funcionario === funcId)
+                                            .reduce((sum, r) => sum + parseFloat(r.qtd_total || 0), 0);
+                                        return `<tr><td>${funcId}</td><td>${total}</td></tr>`;
                                     }).join('')}
-                                </svg>
-                            </div>
-                        ` : ''}
-                    </div>
+                                </tbody>
+                            </table>
+                        </div>
                     ` : ''}
 
-                    ${(options.includes(12) || options.includes(13)) ? `
-                    <div class="section">
-                        <div class="section-header">
-                            <h2>Avaliações e Qualidade</h2>
-                        </div>
-                    </div>
-                    ` : ''}
+                    ${options.includes(5) && data.qtdVendasMensal && data.qtdVendasMensal.length > 0 ? 
+                        `
+                            <div class="chart-container">
+                                <div class="chart-title">Vendas por Atendente (Mês Atual)</div>
+                                <table>
+                                    <thead>
+                                        <tr><th>Atendente</th><th>Total (qtd)</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        ${Array.from(new Set(data.qtdVendasMensal.map(r => r.id_funcionario))).map(funcId => {
+                                            const total = data.qtdVendasMensal
+                                                .filter(r => r.id_funcionario === funcId)
+                                                .reduce((sum, r) => sum + parseInt(r.qtd_vendas || 0), 0);
+                                            const name = data.qtdVendasMensal.find(r => r.id_funcionario === funcId)?.name || funcId;
+                                            return `<tr><td>${name}</td><td>${total}</td></tr>`;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `
+                    : ''}
+
+                    ${options.includes(6) && data.qtdVendasAnual && data.qtdVendasAnual.length > 0 ? 
+                        `
+                            <div class="chart-container">
+                                <div class="chart-title">Vendas por Atendente (Ano Atual)</div>
+                                <table>
+                                    <thead>
+                                        <tr><th>Atendente</th><th>Total (qtd)</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        ${Array.from(new Set(data.qtdVendasAnual.map(r => r.id_funcionario))).map(funcId => {
+                                            const total = data.qtdVendasAnual
+                                                .filter(r => r.id_funcionario === funcId)
+                                                .reduce((sum, r) => sum + parseInt(r.qtd_vendas || 0), 0);
+                                            const name = data.qtdVendasAnual.find(r => r.id_funcionario === funcId)?.name || funcId;
+                                            return `<tr><td>${name}</td><td>${total}</td></tr>`;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `
+                    : ''}
 
                     <div class="page-footer">
                         Página 3 de 3 | Relatório Gerencial - Estação de Bicicletas
@@ -821,6 +822,7 @@ export class ReportsService {
                 </div>
                 ` : ''}
             </body>
+
             </html>
         `;
 
