@@ -47,10 +47,9 @@ export function BikeRackProvider({children} : {children: React.ReactNode}) {
         setBikeRackLoading(true);
 
         fetch(`http://localhost:4000/user/listBikeracks/${user.user_id}`)
-        // fetch(`http://localhost:4000/user/listBikeracks/2`)
         .then(res => res.json())
         .then(data => {
-            setUserBikeRacks(data.map(bikerack => {
+            const bikeRacks = data.map(bikerack => {
                 return {
                     id: bikerack.bike_rack_id,
                     name: bikerack.name,
@@ -63,15 +62,22 @@ export function BikeRackProvider({children} : {children: React.ReactNode}) {
                     } : null,
                     role: bikerack.role
                 }
-            }))
+            });
+            setUserBikeRacks(bikeRacks);
+            
+            // if (bikeRacks.length > 0) {
+            //     const firstBikeRack = bikeRacks[0];
+            //     setCurrentBikeRack(firstBikeRack);
+            //     changeUserRole(firstBikeRack.role);
+            // }
         })
         .catch(err => {
-            console.error("Erro ao buscar Bicicletários do Usuário",err)
-            throw new Error(err);
+            console.error("Erro ao buscar Bicicletários do Usuário", err);
         }).finally(() => {
-            setBikeRackLoading(false)
-        })
-    }, [user?.user_id, refetchCount])
+            setBikeRackLoading(false);
+        });
+    }, [user?.user_id, refetchCount]);
+
 
     const selectBikeRack = async (index: number) => {
         setBikeRackLoading(true);
@@ -83,30 +89,15 @@ export function BikeRackProvider({children} : {children: React.ReactNode}) {
             return;
         }
 
-        // Atualiza o bike rack selecionado
+        // Atualiza o bike rack selecionado E muda a role
         setCurrentBikeRack(selectedBikeRack);
-
-        try {
-            // Busca a role do usuário no bike rack selecionado
-            const res = await fetch(`http://localhost:4000/user/role/${selectedBikeRack.id}/${user.user_id}`);
-            
-            if (!res.ok) {
-                throw new Error('Erro ao buscar role');
-            }
-
-            const data = await res.json();
-            
-            if (data.role) {
-                changeUserRole(data.role as UserRole);
-            } else {
-                changeUserRole("customer");
-            }
-        } catch (err) {
-            console.log("Não foi possível buscar a Role:", err);
-            changeUserRole("customer"); // Fallback
-        } finally {
-            setBikeRackLoading(false);
-        }
+        changeUserRole(selectedBikeRack.role);
+        
+        // console.log("bikeracks:", userBikeRacks);
+        // console.log("bikeracks selecionado:", selectedBikeRack);
+        // console.log("role do usuário no bikerack atual:", selectedBikeRack.role);
+        
+        setBikeRackLoading(false);
     };
 
     const createBikeRack = async (bikerack: BikeRackType): Promise<boolean> => {
@@ -138,9 +129,9 @@ export function BikeRackProvider({children} : {children: React.ReactNode}) {
 
             console.log(data)
 
-            // vincular esse bikerack criado ao usuário que solicitou:
+            // Vincular esse bikerack criado ao usuário que solicitou
             try {
-                fetch(`http://localhost:4000/user/createRole`, {
+                const roleRes = await fetch(`http://localhost:4000/user/createRole`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -151,8 +142,9 @@ export function BikeRackProvider({children} : {children: React.ReactNode}) {
                         id_bikerack: data["bike_rack_id"],
                         role: "owner"
                     })
-                })
-                if(!res.ok){
+                });
+                
+                if(!roleRes.ok){
                     console.log("Erro ao anexar o bicicletário criado ao usuário que criou!")
                     return false;
                 }
@@ -162,27 +154,30 @@ export function BikeRackProvider({children} : {children: React.ReactNode}) {
                 console.log("Erro na atribuição de função do usuário no bicicletário:");
                 setBikeRackLoading(false);
                 return false;
-
             }
 
-            // atualiza lista de bikeracks desse usuário
-            refetch();
+            // Cria o novo bike rack para adicionar à lista
+            const newBikeRack: BikeRackType = {
+                id: data["bike_rack_id"],
+                name: bikerack.name,
+                address: bikerack.address,
+                role: "owner"
+            };
+
+            // Atualiza estado local imediatamente
+            setUserBikeRacks(prev => [...prev, newBikeRack]);
+            setCurrentBikeRack(newBikeRack);
             changeUserRole('owner');
 
-            for(const br of userBikeRacks){
-                if(br.id === data["bike_rack_id"]){
-                    setCurrentBikeRack(br);
-                    break;
-                }
-            }
+            // Atualiza também via refetch para garantir sincronização
+            refetch();
+            
+            return true;
         }catch(err){
             console.log("Erro na criação de bicicletário:", err)
-            setBikeRackLoading(false);
             return false;
-
         }finally{
             setBikeRackLoading(false);
-            return true
         }
     }
 
@@ -196,8 +191,7 @@ export function BikeRackProvider({children} : {children: React.ReactNode}) {
     }), [bikeRackLoading, currentBikeRack, userBikeRacks, createBikeRack, selectBikeRack, refetch])
 
     return (
-        <BikeRackContext.Provider
-        value={value}>
+        <BikeRackContext.Provider value={value}>
             {children}
         </BikeRackContext.Provider>
     );

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -6,12 +6,21 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
-import { Bike, Eye, EyeOff } from "lucide-react"
+import { Bike, Eye, EyeOff, Origami } from "lucide-react"
+
+interface BikeRackViewType {
+  id: number,
+  name: string,
+  city: string,
+  state: string
+}
 
 export default function Login() {
+  const [availableBikeRacks, setAvailableBikeRacks] = useState<BikeRackViewType[]>([])
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -84,6 +93,11 @@ export default function Login() {
       })
       .then(response => {
         if (!response.ok) {
+          toast({
+            title: "Erro ao cadastrar",
+            description: "Não foi possível fazer o seu cadastro no sistema.",
+            variant: 'destructive'
+          })
           throw new Error("Erro ao cadastrar")
         }
         return response.json()
@@ -106,6 +120,45 @@ export default function Login() {
     }
   }
 
+  const fetchBikeRacks = async () => {
+    fetch(`http://localhost:4000/bikerack/list`)
+    .then(res => {
+      if(!res.ok){
+        toast({
+          title:'Erro ao buscar bicicletários!',
+          description: "Parece que houve um problema na busca dos bicicletáios",
+          variant: 'destructive'
+        })
+        return;
+      }
+
+      return res.json();
+    })
+    .then(data => {
+      setAvailableBikeRacks(data.map(br => {
+        return {
+          id: br.bike_rack_id,
+          name: br.name,
+          city: br.city,
+          state: br.state
+        } as BikeRackViewType
+      }))
+    })
+    .catch(err => {
+      toast({
+        title:'Erro ao buscar bicicletários!',
+        description: "Parece que há um problema no servidor.",
+        variant: 'destructive'
+      })
+    })
+
+    console.log(availableBikeRacks)
+  }
+
+  useEffect(() => {
+    fetchBikeRacks();
+  }, [])
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <div className="w-full max-w-md">
@@ -122,9 +175,10 @@ export default function Login() {
         </div>
 
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="login">Entrar</TabsTrigger>
             <TabsTrigger value="register">Cadastrar</TabsTrigger>
+            <TabsTrigger value="bikeracks">Bicicletários</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login">
@@ -282,6 +336,65 @@ export default function Login() {
                     {isLoading ? "Criando conta..." : "Criar conta"}
                   </Button>
                 </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bikeracks">
+            <Card>
+              <CardHeader>
+                <CardTitle>Biciletários</CardTitle>
+                <CardDescription>
+                  Bicicletários disponíveis no sistema.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[391px] w-full">
+                  <div className="flex flex-col gap-2">
+                  {
+                    availableBikeRacks.map(br => {
+                      return (
+                        <Card key={br.id} className="hover:shadow-md transition-shadow p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg mb-1">{br.name}</h3>
+                              <p className="text-sm text-muted-foreground">{`${br.city} • ${br.state}`}</p>
+                            </div>
+                            
+                            {/* Botão à direita */}
+                            <div className="ml-4">
+                              {/* <Button variant="outline" onClick={() => {
+                                // mudar para o tabContent de login
+                                const loginTab = document.querySelector('[data-tab="login"]') as HTMLButtonElement;
+                                if (loginTab) {
+                                  loginTab.click();
+                                }
+                                toast({
+                                  title: "Ops, só mais um passo!",
+                                  description: "Para adicionar o bicicletário, faça login antes."
+                                })
+                              }}>
+                                Visualizar
+                              </Button> */}
+                              <Bike className="h-8 w-8"/>
+                            </div>
+                          </div>
+                        </Card>
+                      )
+                    })
+                  }
+                  </div>
+                  {
+                    availableBikeRacks.length === 0 &&
+                    <div className="h-full mt-20 flex flex-col items-center gap-5">
+                      <Origami className="h-20 w-20 text-gray-300"/>
+                      <div className="flex flex-col items-center gap-1">
+                        <h1 className="text-2xl">Nenhum bicicletário disponível</h1>
+                        <p className="text-gray-500">Crie o seu próprio bicicletário!</p>
+                      </div>
+                    </div>
+                  }
+                </ScrollArea>
               </CardContent>
             </Card>
           </TabsContent>

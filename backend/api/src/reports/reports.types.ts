@@ -3,7 +3,7 @@ const categorias_relatorios = [
     "Usuários",
     "Financeiro",
     "Planos",
-    "Avaliações"
+    // "Avaliações"
 ]
 
 const opcoes_relatorios = [
@@ -62,28 +62,28 @@ const opcoes_relatorios = [
         category: "Financeiro",
         description: "ganho anual"
     },
-    {
-        id: 12,
-        category: "Usuários",
-        description: "número de usuários por tipo"
-    },
+    // {
+    //     id: 12,
+    //     category: "Usuários",
+    //     description: "número de usuários por tipo"
+    // },
+    // {
+    //     id: 13,
+    //     category: "Avaliações",
+    //     description: "média mensal de avaliações"
+    // },
     {
         id: 13,
-        category: "Avaliações",
-        description: "média mensal de avaliações"
-    },
-    {
-        id: 14,
         category: "Financeiro",
         description: "lucro mensal por bicicletas"
     },
     {
-        id: 15,
+        id: 14,
         category: "Financeiro",
         description: "lucro anual por bicicletas"
     },
     {
-        id: 16,
+        id: 15,
         category: "Financeiro",
         description: "receitas anuais"
     },

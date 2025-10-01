@@ -20,9 +20,10 @@ import { ReviewService } from './review/review.service';
 import { ReviewController } from './review/review.controller';
 import { ReviewModule } from './review/review.module';
 import { ReportsModule } from './reports/reports.module';
+import { RentModule } from './rent/rent.module';
 
 @Module({
-  imports: [DatabaseModule, BikerackModule, UserModule, AuthModule, PlanModule, NotificationModule, ReviewModule, ReportsModule],
+  imports: [DatabaseModule, BikerackModule, UserModule, AuthModule, PlanModule, NotificationModule, ReviewModule, ReportsModule, RentModule],
   controllers: [AppController, UserController, AuthController, PlanController, NotificationController, ReviewController],
   providers: [AppService, BikerackService, UserService, AuthService, PlanService, NotificationService, ReviewService],
 })

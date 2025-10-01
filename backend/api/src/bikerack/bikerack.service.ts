@@ -88,6 +88,13 @@ export class BikerackService {
         }
     }
 
+    async viewBikeracks(){
+        return await this.database.query(`
+            SELECT * FROM v_bikerack_detalhes;
+        `,
+        []);
+    }
+
     async listBikes(bike_rack_id: number){
         try{
             return await this.database.query(
@@ -255,14 +262,60 @@ export class BikerackService {
         try {
             return await this.database.query(
                 `
-                SELECT ur.bike_rack_id AS id, br.name
-                FROM UsersRole ur
-                INNER JOIN BikeRack br ON ur.bike_rack_id = br.bike_rack_id
-                WHERE user_id = $1;
+                    SELECT ur.bike_rack_id AS id, br.name
+                    FROM UsersRole ur
+                    INNER JOIN BikeRack br ON ur.bike_rack_id = br.bike_rack_id
+                    WHERE user_id = $1;
                 `, [id_user]
             );
         } catch (e) {
             throw new BadGatewayException('Erro ao tentar listar Bicicletários do Usuário!', e.message);
+        }
+    }
+
+    async bikerackUsers(id_bikerack: number){
+        try{
+            return await this.database.query(
+                `
+                    WITH ids_roles AS(
+                        SELECT user_id, role
+                        FROM UsersRole
+                        WHERE bike_rack_id = $1
+                    )
+                    SELECT u.*, a.*, i.role
+                    FROM Users u
+                    LEFT JOIN Address a
+                        ON u.address_id = a.address_id
+                    INNER JOIN ids_roles i
+                        ON u.user_id = i.user_id
+                `,
+                [id_bikerack]
+            )
+        }catch(e){
+            throw new BadGatewayException('Erro ao tentar listar clientes de um bicicletário!', e.message)
+        }
+    }
+
+    async bikerackCustomers(id_bikerack: number){
+        try{
+            return await this.database.query(
+                `
+                    WITH ids_roles AS(
+                        SELECT user_id, role
+                        FROM UsersRole
+                        WHERE bike_rack_id = $1 AND role = 'customer'
+                    )
+                    SELECT u.user_id, u.email, u.name
+                    FROM Users u
+                    LEFT JOIN Address a
+                        ON u.address_id = a.address_id
+                    INNER JOIN ids_roles i
+                        ON u.user_id = i.user_id
+                `,
+                [id_bikerack]
+            )
+        }catch(e){
+            throw new BadGatewayException('Erro ao tentar listar clientes de um bicicletário!', e.message)
         }
     }
 

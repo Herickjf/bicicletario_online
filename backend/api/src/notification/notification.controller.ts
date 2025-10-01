@@ -8,31 +8,56 @@ export class NotificationController {
 
     @Post('create')
     async create(@Body() notificationDto: NotificationDto) {
-        return this.notificationService.createNotification(notificationDto);
+        return await this.notificationService.createNotification(notificationDto);
     }
 
     @Get('recipient/:id')
     async getByRecipient(@Param('id') recipientId: number) {
-        return this.notificationService.getNotificationsByRecipient(recipientId);
+        return await this.notificationService.getNotificationsByRecipient(recipientId);
     }
 
     @Post('mark-as-read/:id')
     async markAsRead(@Param('id') notificationId: number) {
-        return this.notificationService.markAsRead(notificationId);
+        return await this.notificationService.markAsRead(notificationId);
     }
 
     @Delete('delete/:id')
     async delete(@Param('id') notificationId: number) {
-        return this.notificationService.deleteNotification(notificationId);
+        return await this.notificationService.deleteNotification(notificationId);
     }
 
     @Get('unread-count/:recipientId')
     async countUnread(@Param('recipientId') recipientId: number) {
-        return this.notificationService.countUnreadNotifications(recipientId);
+        return await this.notificationService.countUnreadNotifications(recipientId);
     }
 
     @Delete('delete-by-recipient/:recipientId')
     async deleteByRecipient(@Param('recipientId') recipientId: number) {
-        return this.notificationService.deleteNotificationsByRecipient(recipientId);
+        return await this.notificationService.deleteNotificationsByRecipient(recipientId);
+    }
+
+    @Post("sendNotification")
+    async sendNotification(@Body() notification: {bike_rack_id:number, user_id: number, content: {title: string, message: string}}){
+        return await this.notificationService.sendNotification(notification.bike_rack_id, notification.user_id, notification.content.title, notification.content.message);
+    }
+
+    @Post("sendToAllBikerack")
+    async sendNotificationBikerack(@Body() notification: {id_bikerack: number, content: {title: string, message: string}}){
+        return await this.notificationService.sendNotificationBikerack(notification.id_bikerack, notification.content.title, notification.content.message);
+    }
+
+    @Post("sendToAllAttendant")
+    async sendNotificationAttendants(@Body() notification: {id_bikerack: number, content: {title: string, message: string}}){
+        return await this.notificationService.sendToAllAttendant(notification.id_bikerack, notification.content.title, notification.content.message);
+    }
+
+    @Post("sendToAllSuperiors")
+    async sendNotificationSuperiors(@Body() notification: {id_bikerack: number, content: {title: string, message: string}}){
+        return await this.notificationService.sendNotificationSuperiors(notification.id_bikerack, notification.content.title, notification.content.message);
+    }
+
+    @Post("sendToEveryoneExceptCustomers")
+    async sendToEveryoneExceptCustomers(@Body() notification: {id_bikerack: number, content: {title: string, message: string}}){
+        return await this.notificationService.sendToEveryoneExceptCustomers(notification.id_bikerack, notification.content.title, notification.content.message);
     }
 }

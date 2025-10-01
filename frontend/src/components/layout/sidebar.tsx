@@ -58,8 +58,8 @@ const getMenuItems = (role: string) => {
         href: "/rentals"
       }, {
         icon: Users,
-        label: "Funcionários",
-        href: "/employees"
+        label: "Usuários",
+        href: "/users"
       }, {
         icon: Package,
         label: "Planos",
@@ -80,8 +80,8 @@ const getMenuItems = (role: string) => {
         href: "/rentals"
       }, {
         icon: Users,
-        label: "Clientes",
-        href: "/customers"
+        label: "Usuários",
+        href: "/users"
       }, {
         icon: Bike,
         label: "Bicicletas",

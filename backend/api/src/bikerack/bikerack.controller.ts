@@ -36,6 +36,15 @@ export class BikerackController {
         return await this.service.list();
     }
 
+    @Get('viewBikeracks')
+    @ApiOperation({
+        summary: 'View dos Bicicletários',
+        description: 'Fornece uma view, guardada no banco de dados, a cerca dos bicicletários'
+    })
+    async viewBikeracks(){
+        return await this.service.viewBikeracks();
+    }
+
     @Get('listBikes/:bike_rack_id')
     @ApiOperation({
         summary: 'Listagem de Bicicletas de um Bicicletário',
@@ -112,6 +121,23 @@ export class BikerackController {
     })
     async userBikeRacks(@Param('id') id_user: number){
         return await this.service.userBikeRacks(id_user);
+    }
+
+    @Get('getUsers/:id')
+    @ApiOperation({
+        summary: 'Lista Usuários de um Biciletário',
+        description: 'Lista todos os usuários de um bicicletário específico'
+    })
+    async bikerackUsers(@Param('id') id_bikerack: number){
+        return await this.service.bikerackUsers(id_bikerack);
+    }
+
+    @Get('getCustomers/:id')
+    @ApiOperation({
+        summary: 'Lista todos os Clientes de um Bicicletário'
+    })
+    async bikerackCustomers(@Param('id') id_bikerack: number){
+        return await this.service.bikerackCustomers(id_bikerack);
     }
 
     @Patch('update/:id')

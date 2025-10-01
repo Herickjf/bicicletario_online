@@ -227,99 +227,20 @@ export class ReportsService {
 
     private async GanhoMensal(bike_rack_id: number) {
         // Ganho com aluguéis do mês atual
-        const aluguelResult = await this.database.query(
-            `
-            SELECT COALESCE(SUM(total_value),0) AS ganho_alugueis
-            FROM Rent
-            WHERE bike_rack_id = $1
-            AND DATE_TRUNC('month', rent_date) = DATE_TRUNC('month', CURRENT_DATE)
-            `,
-            [bike_rack_id]
-        );
-        const ganho_com_alugueis = aluguelResult[0]?.ganho_alugueis || 0;
-
-        // Ganho com planos ativos no mês atual
-        const planoResult = await this.database.query(
-            `
-            SELECT COALESCE(SUM(price),0) AS ganho_planos
-            FROM Subscription s
-            INNER JOIN Plan p ON s.plan_id = p.plan_id
-            WHERE p.bike_rack_id = $1
-            AND s.active = TRUE
-            AND DATE_TRUNC('month', s.start_date) <= DATE_TRUNC('month', CURRENT_DATE)
-            AND (s.end_date IS NULL OR DATE_TRUNC('month', s.end_date) >= DATE_TRUNC('month', CURRENT_DATE))
-            `,
-            [bike_rack_id]
-        );
-        const ganho_com_planos = planoResult[0]?.ganho_planos || 0;
-
-        // Média diária do mês
-        const diasNoMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-        const total = ganho_com_alugueis + ganho_com_planos;
-        const media = total / diasNoMes;
-
-        return {
-            total,
-            media,
-            ganho_com_alugueis,
-            ganho_com_planos
-        };
+        return await this.database.query("SELECT * FROM ganho_mensal($1)", [bike_rack_id]);
     }
 
     private async GanhoAnual(bike_rack_id: number) {
         // Ganho com aluguéis por mês
-        const aluguelResult = await this.database.query(
-            `
-            SELECT 
-                DATE_TRUNC('month', rent_date) AS mes,
-                COALESCE(SUM(total_value),0) AS ganho_alugueis
-            FROM Rent
-            WHERE bike_rack_id = $1
-            AND DATE_TRUNC('year', rent_date) = DATE_TRUNC('year', CURRENT_DATE)
-            GROUP BY mes
-            ORDER BY mes
-            `,
-            [bike_rack_id]
-        );
-
-        // Ganho com planos por mês
-        const planoResult = await this.database.query(
-            `
-            SELECT
-                DATE_TRUNC('month', s.start_date) AS mes,
-                COALESCE(SUM(p.price),0) AS ganho_planos
-            FROM Subscription s
-            INNER JOIN Plan p ON s.plan_id = p.plan_id
-            WHERE p.bike_rack_id = $1
-            AND s.active = TRUE
-            AND DATE_TRUNC('year', s.start_date) = DATE_TRUNC('year', CURRENT_DATE)
-            GROUP BY mes
-            ORDER BY mes
-            `,
-            [bike_rack_id]
-        );
-
-        // Combina os resultados por mês
-        const resultado: { mes: string; ganho_alugueis: number; ganho_planos: number; total: number }[] = [];
-
-        // Cria um mapa de meses para lookup rápido
-        const mapaAlugueis = new Map(aluguelResult.map(r => [r.mes.toISOString().slice(0,7), r.ganho_alugueis]));
-        const mapaPlanos = new Map(planoResult.map(r => [r.mes.toISOString().slice(0,7), r.ganho_planos]));
-
-        for (let m = 0; m < 12; m++) {
-            const mes = new Date(new Date().getFullYear(), m, 1);
-            const chave = mes.toISOString().slice(0,7);
-            const ganho_alugueis = mapaAlugueis.get(chave) || 0;
-            const ganho_planos = mapaPlanos.get(chave) || 0;
-            resultado.push({
-                mes: chave,
-                ganho_alugueis,
-                ganho_planos,
-                total: ganho_alugueis + ganho_planos
-            });
-        }
-
-        return resultado;
+        const ret = await this.database.query(
+        `
+            SELECT mes, ganho_com_alugueis, ganho_com_planos, ganho_total 
+            FROM ganho_anual_view 
+            WHERE bike_rack_id = $1 
+            ORDER BY mes;
+        `, [bike_rack_id]);
+        console.log(ret);
+        return ret;
     }
 
     private async PlanosCanceladosNoMes(bike_rack_id: number){
@@ -397,6 +318,11 @@ export class ReportsService {
         );
     }
 
+    async safeToFixed(value: number | string, digits: number = 2): Promise<string> {
+        const num = typeof value === 'string' ? parseFloat(value) : value;
+        return isNaN(num) ? '0.00' : num.toFixed(digits);
+    }
+
     async getReports(bike_rack_id: number, options: number[]) {
         const data: any = {};
 
@@ -409,13 +335,20 @@ export class ReportsService {
         if (options.includes(7)) data.qtdLucroMensal = await this.qtdLucroPorAtendenteMensal(bike_rack_id);
         if (options.includes(8)) data.qtdLucroAnual = await this.qtdLucroPorAtendenteAnual(bike_rack_id);
         if (options.includes(9)) data.statusBicicletas = await this.statusBicicletas(bike_rack_id);
-        if (options.includes(10)) data.ganhoMensal = await this.GanhoMensal(bike_rack_id);
-        if (options.includes(11)) data.ganhoAnual = await this.GanhoAnual(bike_rack_id);
-        if (options.includes(12)) data.mediaAvaliacoesMensal = await this.MediaAvaliacoesMensal(bike_rack_id);
-        if (options.includes(13)) data.mediaAvaliacoesAnual = await this.MediaAvaliacoesAnual(bike_rack_id);
+        if (options.includes(10)){
+            data.ganhoMensal = (await this.GanhoMensal(bike_rack_id))[0];
+            data.ganhoMensal.media = await this.safeToFixed(data.ganhoMensal.media)
+        }
+        if (options.includes(11)){
+            data.ganhoAnual = await this.GanhoAnual(bike_rack_id);
+            console.log(data.ganhoAnual)
+        } 
+        // if (options.includes(12)) data.mediaAvaliacoesMensal = await this.MediaAvaliacoesMensal(bike_rack_id);
+        // if (options.includes(13)) data.mediaAvaliacoesAnual = await this.MediaAvaliacoesAnual(bike_rack_id);
         if (options.includes(14)) data.receitaPorBicicletaMensal = await this.receitaPorBicicletaMensal(bike_rack_id);
         if (options.includes(15)) data.receitaPorBicicletaAnual = await this.receitaPorBicicletaAnual(bike_rack_id);
         if (options.includes(16)) data.receitasAnuais = await this.receitasAnuais(bike_rack_id);
+
 
         const html = `
             <!DOCTYPE html>
@@ -755,7 +688,7 @@ export class ReportsService {
                                 <line x1="50" y1="220" x2="550" y2="220" stroke="hsl(var(--border))" stroke-width="1"/>
                                 ${data.ganhoAnual.map((r, i) => {
                                     const x = 80 + (i * 440/11);
-                                    const height = (r.total/ Math.max(...data.ganhoAnual.map(d => d.total)) * 180);
+                                    const height = (r.ganho_total/ Math.max(...data.ganhoAnual.map(d => d.ganho_total)) * 180);
                                     return `
                                         <rect x="${x-15}" y="${220 - height}" width="30" height="${height}" fill="hsl(var(--primary))" opacity="0.7"/>
                                         <text x="${x}" y="235" text-anchor="middle" font-size="10" fill="hsl(var(--muted-foreground))">${i+1}</text>
@@ -776,9 +709,9 @@ export class ReportsService {
                                     ${data.ganhoAnual.map(r => `
                                         <tr>
                                             <td>${new Date(r.mes).toLocaleString('pt-BR', { month: 'long' })}</td>
-                                            <td>${r.ganho_alugueis}</td>
-                                            <td>${r.ganho_planos}</td>
-                                            <td><strong>${r.total}</strong></td>
+                                            <td>${r.ganho_com_alugueis}</td>
+                                            <td>${r.ganho_com_planos}</td>
+                                            <td><strong>${r.ganho_total}</strong></td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -798,7 +731,7 @@ export class ReportsService {
                                 <line x1="50" y1="180" x2="550" y2="180" stroke="hsl(var(--border))" stroke-width="1"/>
                                 ${data.receitasAnuais.map((r, i) => {
                                     const x = 50 + (i * 500/(data.receitasAnuais.length-1));
-                                    const height = (r.receita/ Math.max(...data.receitasAnuais.map(d => d.receita)) * 150);
+                                    const height = (r.ganho_total/ Math.max(...data.receitasAnuais.map(d => d.ganho_total)) * 150);
                                     return `
                                         <rect x="${x-12}" y="${180 - height}" width="24" height="${height}" fill="hsl(var(--primary))"/>
                                         <text x="${x}" y="195" text-anchor="middle" font-size="10" fill="hsl(var(--muted-foreground))">${new Date(r.year).getFullYear()}</text>
@@ -879,27 +812,6 @@ export class ReportsService {
                         <div class="section-header">
                             <h2>Avaliações e Qualidade</h2>
                         </div>
-                        
-                        ${options.includes(12) && data.mediaAvaliacoesMensal && data.mediaAvaliacoesMensal.length > 0 ? `
-                            <div class="chart-container">
-                                <div class="chart-title">Média de Avaliações por Dia (Mês Atual)</div>
-                                <svg width="100%" height="200" viewBox="0 0 600 200">
-                                    <line x1="50" y1="180" x2="550" y2="180" stroke="hsl(var(--border))" stroke-width="1"/>
-                                    ${data.mediaAvaliacoesMensal.map((r, i) => {
-                                        const x = 50 + (i * 500/(data.mediaAvaliacoesMensal.length-1));
-                                        const height = ((r.avg || 0)/5 * 150);
-                                        return `
-                                            <rect x="${x-8}" y="${180 - height}" width="16" height="${height}" fill="hsl(var(--primary))" opacity="0.6"/>
-                                        `;
-                                    }).join('')}
-                                    <line x1="50" y1="180-30" x2="550" y2="180-30" stroke="hsl(var(--border))" stroke-width="0.5" stroke-dasharray="4"/>
-                                    <line x1="50" y1="180-60" x2="550" y2="180-60" stroke="hsl(var(--border))" stroke-width="0.5" stroke-dasharray="4"/>
-                                    <line x1="50" y1="180-90" x2="550" y2="180-90" stroke="hsl(var(--border))" stroke-width="0.5" stroke-dasharray="4"/>
-                                    <line x1="50" y1="180-120" x2="550" y2="180-120" stroke="hsl(var(--border))" stroke-width="0.5" stroke-dasharray="4"/>
-                                    <line x1="50" y1="180-150" x2="550" y2="180-150" stroke="hsl(var(--border))" stroke-width="0.5" stroke-dasharray="4"/>
-                                </svg>
-                            </div>
-                        ` : ''}
                     </div>
                     ` : ''}
 

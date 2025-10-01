@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS Notification(
     PRIMARY KEY (notification_id),
     CONSTRAINT fk_sender
         FOREIGN KEY (sender_id)
-        REFERENCES Users(user_id)
+        REFERENCES BikeRack(bike_rack_id)
         ON DELETE SET NULL,
     CONSTRAINT fk_recipient
         FOREIGN KEY (recipient_id)

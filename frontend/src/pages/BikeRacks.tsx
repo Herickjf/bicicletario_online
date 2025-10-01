@@ -31,7 +31,7 @@ interface BikeRack {
 const roleColors = {
   customer: "bg-primary text-primary-foreground",
   owner: "bg-warning text-warning-foreground",
-  manager: "bg-success text-success-foreground",
+  manager: "bg-success text-primary-foreground",
   attendant: "bg-destructive text-destructive-foreground",
 }
 

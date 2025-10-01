@@ -10,13 +10,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
+import { useBikeRacks } from "@/contexts/bikerack-context"
 
 export function Header() {
   const { user } = useAuth()
+  const { currentBikeRack } = useBikeRacks();
 
   return (
     <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
       <div className="flex h-14 items-center gap-4 px-4 lg:px-6">
+        <h1 className="text-2xl">{currentBikeRack ? `Bicicletário: ${currentBikeRack.name}` : 'Escolha um bicicletário'}</h1>
         <div className="flex-1">
           <div className="relative max-w-md">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -26,6 +29,7 @@ export function Header() {
               className="pl-8"
             />
           </div>
+
         </div>
         
         <div className="flex items-center gap-2">

@@ -23,7 +23,7 @@ export class UserService {
                     RETURNING address_id
                     `, cliente.address);
         }catch(e){
-            throw new BadGatewayException('Erro ao tentar cadastrar endereço');
+            throw new BadRequestException('Erro ao tentar cadastrar endereço');
         }
 
         address_id = ret ? ret[0]['address_id'] : null
@@ -98,17 +98,13 @@ export class UserService {
     }
 
     async deleteRole(id_user: number, id_bikerack: number){
-        try{
-            return await this.database.query(
-                `
-                DELETE FROM UsersRole
-                WHERE user_id = $1 AND bike_rack_id = $2
-                RETURNING *
-                `, [id_user, id_bikerack]
-            );
-        }catch(e){
-            throw new BadGatewayException('Erro ao tentar remover papel de User!');
-        }
+        return await this.database.query(
+            `
+            DELETE FROM UsersRole
+            WHERE user_id = $1 AND bike_rack_id = $2
+            RETURNING *
+            `, [id_user, id_bikerack]
+        );
     }
 
     async list(){
